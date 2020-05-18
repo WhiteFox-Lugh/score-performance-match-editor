@@ -23,7 +23,7 @@ class Region {
         if (t1 >= t2){
             return;
         }
-        this.regions.add([t1, t2]);
+        this.regions.push([t1, t2]);
         return;
     }
 
@@ -32,6 +32,36 @@ class Region {
         for (let item of this.regions){
             console.log(item);
         }
+    }
+
+    /**
+     * 重なり合う region を除去する
+     */
+    removeOverlappingRegion(){
+        let newRegion = [];
+        let left = -10000;
+        let right = -10000;
+        this.regions.sort(regionSortFunction);
+
+        for (let i=0; i<this.regions.length; i++){
+            let t1 = this.regions[i][0];
+            let t2 = this.regions[i][1];
+            if (t2 < right){
+                continue;
+            }
+            else if(t1 <= right && right < t2){
+                right = t2;
+            }
+            else if(right < t1){
+                newRegion.push([left, right]);
+                left = t1;
+                right = t2;
+            }
+        }
+        newRegion.push([left, right]);
+        this.regions = newRegion;
+        this.debug();
+        return;
     }
 }
 

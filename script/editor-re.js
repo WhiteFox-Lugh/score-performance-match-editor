@@ -376,7 +376,7 @@ function fmtMissingNoteErrorRegions(minTRef, minSTime, maxSTime, tempo){
 
 function drawErrorRegions(errorRegions){
 	// 色は固定
-	const REGION_COLOR = "background-color:rgba(255,255,0,0.2);"
+	const REGION_COLOR = "background-color:rgba(255,255,0,0.15);"
 	let ret = "";
 	for (let item of errorRegions){
 		let t1 = item[0];
@@ -583,8 +583,10 @@ function drawFmtNote(){
 		}
 	}
 	
-	// error region を描く
+	// error region 関連
 	let errorRegions = new Region(errorRegionsArray);
+	errorRegions.removeOverlappingRegion();
+
 	ret += drawErrorRegions(errorRegions.regions);
 
 	return ret;
@@ -665,16 +667,16 @@ function drawScore(){
 	let lineStr = drawScoreBase(mysvg);
 	str += lineStr;
 
-	// fmt 系の描画
-	if (fmtEventsArray.length > 0 && matchEventsArray.length > 0){
-		let fmtStr = drawFmtNote();
-		str += fmtStr;
-	}
-
 	// match 系の描画
 	if (matchEventsArray.length > 0){
 		let matchStr = drawMatchNote(); 
 		str += matchStr;
+
+		// fmt 系の描画
+		if (fmtEventsArray.length > 0){
+			let fmtStr = drawFmtNote();
+			str += fmtStr;
+		}
 	}
 	
 	// 反映させる
