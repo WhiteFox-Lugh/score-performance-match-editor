@@ -23,6 +23,7 @@ const REGION_DIFF = 0.3;
 
 // 描画関連
 let maxTime = 2.1;
+let windowWidth = X_OFFSET + maxTime * PX_PER_SEC;
 let fmtEventsArray = [];
 let fmtCommentsArray = [];
 let fmtVersion = "";
@@ -30,6 +31,7 @@ let fmtTPQN = 4;
 let matchEventsArray = [];
 let matchCommentsArray = [];
 let missingNotesArray = [];
+let idToFmtPos = new Map();
 
 
 /**
@@ -316,9 +318,6 @@ function fmtGetErrorRegions(){
 			ret.push([t1, t2]);
 		}
 	}
-	
-	console.log("error regions");
-	console.log(ret);
 	return ret;
 }
 
@@ -412,7 +411,7 @@ function getFmtSubScoreEvents(minSTime, maxSTime){
 /**
  * 楽譜上に fmt のノートをセットする
  */
-function setFmtNote(onLine, offLine, onPos, offPos, ditchHeight, accidental, onvel, yOffset, errInd){
+function setFmtNote(onLine, offLine, onPos, offPos, ditchHeight, accidental, onvel, yOffset, errInd, fmtID){
 	let ret = "";
 
 	if (onLine == offLine){
@@ -420,12 +419,15 @@ function setFmtNote(onLine, offLine, onPos, offPos, ditchHeight, accidental, onv
 		let noteTopPos = onLine * HEIGHT_PER_LINE + yOffset + 5 * HEIGHT_UNIT -
 						 0.5 * HEIGHT_UNIT * (ditchHeight + 1);
 		let noteWidth = offPos - onPos + 1;
+		// map に座標を入れておく (fmtID -> (onPos_x, onPos_y))
+		let fmtPos = [onPos, noteTopPos + HEIGHT_UNIT];
+		idToFmtPos.set(fmtID, fmtPos);
 
 		// 色は暫定で固定（あとで変更）
 		let noteColor = "background-color:rgba(255,30,120,0.7); color:aqua;"
 
-		ret += '<div style="position:absolute; left:'+onPos+'px; top:'+noteTopPos+'px; width:'+(noteWidth-1)+'px; height:9px; border:1px solid rgba(20,20,20,0.7);"></div>';
-		ret += '<div contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos + 0.5)+'px; width:'+(noteWidth)+'px; height:9px; '+noteColor+' font-size:7px;"></div>';
+		ret += '<div style="position:absolute; left:'+onPos+'px; top:'+noteTopPos+'px; width:'+(noteWidth-1)+'px; height:'+(HEIGHT_UNIT-1)+'px; border:1px solid rgba(20,20,20,0.7);"></div>';
+		ret += '<div contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos + 0.5)+'px; width:'+(noteWidth)+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:7px;"></div>';
 
 		// 臨時記号
 		let accidentalLeftPos = onPos;
@@ -448,10 +450,12 @@ function setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime,
 	let fmtSTime = drawedFmtEvt.sTime;
 	let fmtSubOrder = drawedFmtEvt.subOrder;
 	let fmtDur = drawedFmtEvt.duration;
+	let fmtIDArray = drawedFmtEvt.fmtIDs;
 
 	for (let k = 0; k < numNotes; k++){
 		// ノート情報取得
 		let fmtSitch = fmtSitchArray[k];
+		let fmtID = fmtIDArray[k];
 
 		// initialize
 		let isOrnament = false;
@@ -462,8 +466,7 @@ function setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime,
 		// ornament
 		if (fmtSitch.match(',')){
 			isOrnament = true;
-			let idx = fmtSitch.indexOf(',');
-			principleDitch = fmtSitch.substring(0, idx);
+			principleDitch = fmtSitch.substring(0, fmtSitch.indexOf(','));
 		}
 		else {
 			principleDitch = fmtSitch;
@@ -478,9 +481,9 @@ function setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime,
 					(minTRef + (fmtSTime - minSTime) * tempo + fmtSubOrder * GRACE_NOTE_DURATION);
 		let offPos = X_OFFSET + PX_PER_SEC *
 					(minTRef + (fmtSTime + fmtDur - minSTime) * tempo);
-		
+
 		// 描画
-		ret += setFmtNote(0, 0, onPos, offPos, ditchHeight, acc, 100, Y_OFFSET_FMT3X, -2);
+		ret += setFmtNote(0, 0, onPos, offPos, ditchHeight, acc, 100, Y_OFFSET_FMT3X, -2, fmtID);
 	}
 
 	return ret;
@@ -495,10 +498,11 @@ function drawFmtNote(){
 	const STR_REST = "rest";
 	const STR_SHORT_APP = "short-app";
 	const STR_TREMOLO = "tremolo";
+	const STR_AFTERNOTE = "after-note";
 
 	// ret に描くオブジェクトのタグの文字列をどんどん突っ込んでいく
 	let ret = "";
-	let endTime = 0;
+	let endTime = -1000;
 	let fmtEventSize = fmtEventsArray.length;
 	let matchEventSize = matchEventsArray.length;
 
@@ -518,7 +522,8 @@ function drawFmtNote(){
 	// errorRegion の取得 (overlap あり)
 	let errorRegionsArray = fmtGetErrorRegions();
 
-	// セグメントごとの縮小率の計算
+	// fmt セグメントごとの縮小率の計算
+	// idToFmtPos は match の ID -> fmt ノートの座標をマッピングする
 	let segmentIDSize = segmentIds.length;
 	for (let i = 0; i < segmentIDSize - 1; i++){
 		let maxSTime = -1;
@@ -574,21 +579,53 @@ function drawFmtNote(){
 			}
 			// chord : 通常の音符の場合
 			else if (eventType.match(STR_CHORD)){
+				// ノートの描画に関する情報
 				ret += setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime, tempo);
 			}
-			// short-apps
-			else if(eventType.match(STR_SHORT_APP)){
+			// short-apps or after-note
+			else if(eventType.match(STR_SHORT_APP) || eventType.match(STR_AFTERNOTE)){
 				// not implemented
 			}
 		}
 	}
 	
+	// matching line の描画
+	for (let i = 0; i < matchEventSize; i++){
+		let matchEvt = matchEventsArray[i];
+		let evtID = matchEvt.fmtID;
+		let evtOnTime = matchEvt.onTime;
+		let matchSitch = matchEvt.sitch;
+		let sitchHeight = sitchToSitchHeight(matchSitch);
+		let scoreNotePos;
+		if (!idToFmtPos.has(evtID) || evtID.match("\\*") || evtID.match("\\&")){
+			continue;
+		}
+		scoreNotePos = idToFmtPos.get(evtID);
+		let fmtXPos = scoreNotePos[0];
+		let fmtYPos = scoreNotePos[1];
+		let matchXPos = X_OFFSET + PX_PER_SEC * evtOnTime;
+		let matchYPos = -(1 + sitchHeight) * 5 + HEIGHT_C4_MATCH + HEIGHT_UNIT;
+		let horizontalLen = Math.floor(0.6 * STAFF_LINE_SPACE);
+		let p1 = (fmtXPos + horizontalLen) + "," + fmtYPos;
+		let p2 = fmtXPos + "," + fmtYPos;
+		let p3 = matchXPos + "," + matchYPos;
+		let p4 = (matchXPos + horizontalLen) + "," + matchYPos;
+		let pStr = p1 + " " + p2 + " " + p3 + " " + p4;
+		let matchLine = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+		matchLine.setAttribute('points', pStr);
+		matchLine.setAttribute('fill', 'none');
+		matchLine.setAttribute('stroke','#ff8800');
+		matchLine.setAttribute('stroke-width', '2');
+		matchLine.setAttribute('id', 'matchline-' + evtID);
+		mysvg.appendChild(matchLine);
+	}
+	ret += mysvg;
+
 	// error region 関連
 	let errorRegions = new Region(errorRegionsArray);
 	errorRegions.removeOverlappingRegion();
-
 	ret += drawErrorRegions(errorRegions.regions);
-
+	
 	return ret;
 }
 
@@ -638,8 +675,8 @@ function drawMatchNote(){
 		let noteWidth = (matchOfftime - matchOntime) * PX_PER_SEC;
 		let noteColor = channelToColor(matchChannel);
 
-		ret += '<div style="position:absolute; left:'+(noteLeftPos - 1)+'px; top:'+(noteTopPos - 0.5)+'px; width:'+noteWidth+'px; height:9px; border:1px solid rgba(20,20,20,0.7);"></div>';
-		ret += '<div id="note'+matchID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos + 0.5)+'px; width:'+noteWidth+'px; height:9px; '+noteColor+' font-size:7px;">'+matchFmtID+'</div>'; // ここにIDかなんか描くはず？
+		ret += '<div style="position:absolute; left:'+(noteLeftPos - 1)+'px; top:'+(noteTopPos - 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; border:1px solid rgba(20,20,20,0.7);"></div>';
+		ret += '<div id="note'+matchID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos + 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:7px;">'+matchFmtID+'</div>'; // ここにIDかなんか描くはず？
 
 		// 臨時記号の描画
 		let accidental = sitchToAcc(matchSitch);
@@ -658,14 +695,16 @@ function drawMatchNote(){
 function drawScore(){
 	document.getElementById('display').style.width = (window.innerWidth - 50) + 'px';
 	document.getElementById('display').style.height = String(200 + Y_OFFSET_MATCH) + 'px';
-	let width = X_OFFSET + maxTime * PX_PER_SEC;
+	windowWidth = X_OFFSET + maxTime * PX_PER_SEC;
 	let str = "";
-	document.getElementById('display').innerHTML='<svg id="mysvg" xmlns="http://www.w3.org/2000/svg" width="'+(width+20)+'" height="500"></svg>';
-	let mysvg = document.getElementById('mysvg');
+	document.getElementById('display').innerHTML='<svg id="mysvg" xmlns="http://www.w3.org/2000/svg" width="'+(windowWidth+20)+'" height="500"></svg>';
 
 	// 五線譜の描画
 	let lineStr = drawScoreBase(mysvg);
 	str += lineStr;
+
+	// match line のマップの初期化
+	idToFmtPos.clear();
 
 	// match 系の描画
 	if (matchEventsArray.length > 0){
@@ -678,8 +717,6 @@ function drawScore(){
 			str += fmtStr;
 		}
 	}
-	
-	// 反映させる
 	document.getElementById('display').innerHTML += str;
 	
 	return;
