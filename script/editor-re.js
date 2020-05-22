@@ -1,5 +1,4 @@
-const HEIGHT_UNIT = 10;
-const LEGER_WIDTH = 0.5;
+const LEGER_WIDTH = 1;
 const PX_PER_SEC = 200;
 const X_OFFSET = 100; // X 座標左端
 const Y_OFFSET_FMT3X = 50; // 五線譜の Y 座標上端（fmt3x） 
@@ -12,18 +11,21 @@ const SPACE = String.fromCharCode(32);
 const HEIGHT_C4_FMT = 100;
 const SEC_PER_LINE = 9999;
 const GRACE_NOTE_DURATION = 0.07;
-const Y_OFFSET_FMT3X_LARGE = 2 * Y_OFFSET_FMT3X + 10 * HEIGHT_UNIT; // yoffset2 にあたる const
-const WIDTH = Math.floor(PX_PER_SEC * SEC_PER_LINE) + 4 * X_OFFSET; // width にあたる const
-const HEIGHT_PER_LINE = 3 * Y_OFFSET_FMT3X + 20 * HEIGHT_UNIT; // widthLast にあたる const
-const UNIT_STROKE_WIDTH = HEIGHT_UNIT / 20.0; // unitStrokeWidth にあたる const
 
 // match 描画関連定数
 const HEIGHT_C4_MATCH = 303;
 const REGION_DIFF = 0.3;
 
 // 描画関連
+const HEIGHT_UNIT = 10;
+let widthAmp = 1.0;
+let Y_OFFSET_FMT3X_LARGE = 2 * Y_OFFSET_FMT3X + 10 * HEIGHT_UNIT; // yoffset2 にあたる const
+let HEIGHT_PER_LINE = 3 * Y_OFFSET_FMT3X + 20 * HEIGHT_UNIT; // widthLast にあたる const
+let UNIT_STROKE_WIDTH = HEIGHT_UNIT / 20.0; // unitStrokeWidth にあたる const
+
+let amplification = 1.0;
 let maxTime = 2.1;
-let windowWidth = X_OFFSET + maxTime * PX_PER_SEC;
+let windowWidth = X_OFFSET + maxTime * (PX_PER_SEC * widthAmp);
 let fmtEventsArray = [];
 let fmtCommentsArray = [];
 let fmtVersion = "";
@@ -165,7 +167,7 @@ function channelToColor(channel){
  */
 function drawScoreBase(mysvg){
 	const LINE_START_X = 0;
-	let width = X_OFFSET + maxTime * PX_PER_SEC;
+	let width = X_OFFSET + maxTime * (PX_PER_SEC * widthAmp);
 	let ret = "";
 
 	// 五線譜の描画部分
@@ -213,7 +215,7 @@ function drawScoreBase(mysvg){
 	}
 	// 小節線と小節番号の描画
 	for(let t = 0; t < maxTime; t++){
-		let lineLeft = t * PX_PER_SEC + X_OFFSET;
+		let lineLeft = t * (PX_PER_SEC * widthAmp) + X_OFFSET;
 		let lineTopFmt = Y_OFFSET_FMT3X - LEGER_WIDTH;
 		let lineTopMatch = Y_OFFSET_MATCH - LEGER_WIDTH;
 		let lineHeight = 12 * HEIGHT_UNIT;
@@ -227,9 +229,9 @@ function drawScoreBase(mysvg){
 	let gclefHeight = 7.5 * HEIGHT_UNIT;
 	let fclefHeight = 3.4 * HEIGHT_UNIT;
 	let gclefTopFmt = HEIGHT_C4_FMT - 6.5 * HEIGHT_UNIT;
-	let fclefTopFmt = HEIGHT_C4_FMT + 0.9 * HEIGHT_UNIT + HEIGHT_UNIT;
+	let fclefTopFmt = HEIGHT_C4_FMT + 1.9 * HEIGHT_UNIT;
 	let gclefTopMatch = HEIGHT_C4_MATCH - 6.5 * HEIGHT_UNIT;
-	let fclefTopMatch = HEIGHT_C4_MATCH + 0.9 * HEIGHT_UNIT + HEIGHT_UNIT;
+	let fclefTopMatch = HEIGHT_C4_MATCH + 1.9 * HEIGHT_UNIT;
 	ret += '<img src="img/Gclef.png" height='+gclefHeight+' style="position:absolute; left:5px; top:'+gclefTopFmt+'px;"/>';
 	ret += '<img src="img/Fclef.png" height='+fclefHeight+' style="position:absolute; left:8px; top:'+fclefTopFmt+'px;"/>';
 	ret += '<img src="img/Gclef.png" height='+gclefHeight+' style="position:absolute; left:5px; top:'+gclefTopMatch+'px;"/>';
@@ -380,8 +382,8 @@ function drawErrorRegions(errorRegions){
 	for (let item of errorRegions){
 		let t1 = item[0];
 		let t2 = item[1];
-		let leftPos = X_OFFSET + PX_PER_SEC * t1;
-		let rightPos = X_OFFSET + PX_PER_SEC * t2;
+		let leftPos = X_OFFSET + (PX_PER_SEC * widthAmp) * t1;
+		let rightPos = X_OFFSET + (PX_PER_SEC * widthAmp) * t2;
 		let topPos = Y_OFFSET_FMT3X - 5 * STAFF_LINE_SPACE;
 		let rectHeight = 25 * STAFF_LINE_SPACE;
 		let rectWidth = rightPos - leftPos;
@@ -477,9 +479,9 @@ function setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime,
 		let acc = sitchToAcc(principleDitch);
 
 		// position の計算
-		let onPos = X_OFFSET + PX_PER_SEC *
+		let onPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
 					(minTRef + (fmtSTime - minSTime) * tempo + fmtSubOrder * GRACE_NOTE_DURATION);
-		let offPos = X_OFFSET + PX_PER_SEC *
+		let offPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
 					(minTRef + (fmtSTime + fmtDur - minSTime) * tempo);
 
 		// 描画
@@ -513,7 +515,7 @@ function drawFmtNote(){
 		endTime = Math.max(endTime, matchOnTime, matchOfftime);
 	}
 	let numOfLine = Math.floor(endTime / SEC_PER_LINE) + 1;
-	let widthLast = Math.floor(PX_PER_SEC * (endTime - Math.floor(endTime / SEC_PER_LINE) * SEC_PER_LINE)) + 4 * X_OFFSET;
+	let widthLast = Math.floor((PX_PER_SEC * widthAmp) * (endTime - Math.floor(endTime / SEC_PER_LINE) * SEC_PER_LINE)) + 4 * X_OFFSET;
 	let height = numOfLine * HEIGHT_PER_LINE;
 
 	// perfmSegmentIds の取得
@@ -603,7 +605,7 @@ function drawFmtNote(){
 		scoreNotePos = idToFmtPos.get(evtID);
 		let fmtXPos = scoreNotePos[0];
 		let fmtYPos = scoreNotePos[1];
-		let matchXPos = X_OFFSET + PX_PER_SEC * evtOnTime;
+		let matchXPos = X_OFFSET + (PX_PER_SEC * widthAmp) * evtOnTime;
 		let matchYPos = -(1 + sitchHeight) * 5 + HEIGHT_C4_MATCH + HEIGHT_UNIT;
 		let horizontalLen = Math.floor(0.6 * STAFF_LINE_SPACE);
 		let p1 = (fmtXPos + horizontalLen) + "," + fmtYPos;
@@ -651,7 +653,7 @@ function drawMatchNote(){
 		let sitchHeight = sitchToSitchHeight(matchSitch);
 
 		// 臨時線の有無を判定し、必要なら描画
-		let leftPos = matchOntime * PX_PER_SEC + X_OFFSET - 8;
+		let leftPos = matchOntime * (PX_PER_SEC * widthAmp) + X_OFFSET - 8;
 		if (sitchHeight == 0){
 			let topPos = HEIGHT_C4_MATCH - LEGER_WIDTH;
 			ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
@@ -659,20 +661,20 @@ function drawMatchNote(){
 		else if (sitchHeight > 11){
 			for (let h=12, end=sitchHeight;h<=end; h+=2){
 				let topPos = HEIGHT_C4_MATCH - 0.5 * HEIGHT_UNIT * h - LEGER_WIDTH;
-				ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:0.5px solid rgba(0,0,0,1);"></div>';
+				ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 			}
 		}
 		else if (sitchHeight < -11){
 			for (let h=-12, end=sitchHeight; h>=end; h-=2){
 				let topPos = HEIGHT_C4_MATCH - 0.5 * HEIGHT_UNIT * h - LEGER_WIDTH;
-				ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:0.5px solid rgba(0,0,0,1);"></div>';
+				ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 			}
 		}
 
 		// ノートの描画
-		let noteLeftPos = matchOntime * PX_PER_SEC + X_OFFSET;
+		let noteLeftPos = matchOntime * (PX_PER_SEC * widthAmp) + X_OFFSET;
 		let noteTopPos = -(1 + sitchHeight) * 5 + HEIGHT_C4_MATCH;
-		let noteWidth = (matchOfftime - matchOntime) * PX_PER_SEC;
+		let noteWidth = (matchOfftime - matchOntime) * (PX_PER_SEC * widthAmp);
 		let noteColor = channelToColor(matchChannel);
 
 		ret += '<div style="position:absolute; left:'+(noteLeftPos - 1)+'px; top:'+(noteTopPos - 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; border:1px solid rgba(20,20,20,0.7);"></div>';
@@ -680,7 +682,7 @@ function drawMatchNote(){
 
 		// 臨時記号の描画
 		let accidental = sitchToAcc(matchSitch);
-		let accidentalLeftPos = matchOntime * PX_PER_SEC + X_OFFSET;
+		let accidentalLeftPos = matchOntime * (PX_PER_SEC * widthAmp) + X_OFFSET;
 		let accidentalTopPosBase = -(1 + sitchHeight) * 5 + HEIGHT_C4_MATCH - 1;
 		ret += drawAccidentalMark(accidental, accidentalLeftPos, accidentalTopPosBase);
 	}
@@ -695,7 +697,7 @@ function drawMatchNote(){
 function drawScore(){
 	document.getElementById('display').style.width = (window.innerWidth - 50) + 'px';
 	document.getElementById('display').style.height = String(200 + Y_OFFSET_MATCH) + 'px';
-	windowWidth = X_OFFSET + maxTime * PX_PER_SEC;
+	windowWidth = X_OFFSET + maxTime * (PX_PER_SEC * widthAmp);
 	let str = "";
 	document.getElementById('display').innerHTML='<svg id="mysvg" xmlns="http://www.w3.org/2000/svg" width="'+(windowWidth+20)+'" height="500"></svg>';
 
@@ -729,6 +731,7 @@ function drawScore(){
 $("#filein1").change(function(event){
 	let txtFile = event.target.files[0];
 	let fileName = txtFile.name;
+	widthAmp = 1.0;
 	readFmtFile(txtFile);
 	document.getElementById('filename1').value = fileName;
 });
@@ -740,8 +743,26 @@ $("#filein1").change(function(event){
 $("#filein2").change(function(event){
 	let txtFile = event.target.files[0];
 	let fileName = txtFile.name;
+	widthAmp = 1.0;
 	readMatchFile(txtFile);
 	document.getElementById('filename2').value = fileName;
+});
+
+
+document.getElementById('minusButton').addEventListener('click', function(){
+	let diff = (widthAmp > 0.5) ? 0.1 : 0;
+	widthAmp -= diff;
+	drawScore();
+	let pos = (document.getElementById('display').scrollLeft + 500 - X_OFFSET) / (1 + diff) + X_OFFSET - 500;
+	document.getElementById('display').scrollLeft = pos;
+});
+
+document.getElementById('plusButton').addEventListener('click', function(){
+	let diff = (widthAmp < 3.0) ? 0.1 : 0;
+	widthAmp += diff;
+	drawScore();
+	let pos = (1 + diff) * (document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
+	document.getElementById('display').scrollLeft = pos;
 });
 
 
@@ -753,7 +774,8 @@ function init(){
 	// 読み込んだファイル名の初期化
 	document.getElementById('filename1').value = '';
 	document.getElementById('filename2').value = '';
-
+	// スコア描画
+	drawScore();
 	return;
 }
 
