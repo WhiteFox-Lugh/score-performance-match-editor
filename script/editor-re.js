@@ -19,10 +19,8 @@ const REGION_DIFF = 0.3;
 // 描画関連
 const HEIGHT_UNIT = 10;
 let widthAmp = 1.0;
-let Y_OFFSET_FMT3X_LARGE = 2 * Y_OFFSET_FMT3X + 10 * HEIGHT_UNIT; // yoffset2 にあたる const
+let heightAmp = 1.0;
 let HEIGHT_PER_LINE = 3 * Y_OFFSET_FMT3X + 20 * HEIGHT_UNIT; // widthLast にあたる const
-let UNIT_STROKE_WIDTH = HEIGHT_UNIT / 20.0; // unitStrokeWidth にあたる const
-let amplification = 1.0; // 横幅倍率
 let maxTime = 2.1;
 let windowWidth = X_OFFSET + maxTime * (PX_PER_SEC * widthAmp);
 let fmtEventsArray = [];
@@ -781,9 +779,9 @@ $("#filein2").change(function(event){
 
 
 /**
- * 横幅拡大ボタンが押されたときの処理
+ * 横幅縮小ボタンが押されたときの処理
  */
-document.getElementById('enlargeButton').addEventListener('click', function(){
+document.getElementById('shrinkButton').addEventListener('click', function(){
 	let diff = (widthAmp > 0.5) ? 0.1 : 0;
 	widthAmp -= diff;
 	drawScore();
@@ -793,11 +791,37 @@ document.getElementById('enlargeButton').addEventListener('click', function(){
 
 
 /**
- * 横幅縮小ボタンが押されたときの処理
+ * 横幅拡大ボタンが押されたときの処理
  */
-document.getElementById('shrinkButton').addEventListener('click', function(){
+document.getElementById('enlargeButton').addEventListener('click', function(){
 	let diff = (widthAmp < 3.0) ? 0.1 : 0;
 	widthAmp += diff;
+	drawScore();
+	let pos = (1 + diff) * (document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
+	document.getElementById('display').scrollLeft = pos;
+});
+
+
+/**
+ * 縮小ボタンが押されたときの処理
+ */
+document.getElementById('minusButton').addEventListener('click', function(){
+	let diff = (widthAmp > 0.5) ? 0.1 : 0;
+	widthAmp -= diff;
+	heightAmp += diff;
+	drawScore();
+	let pos = (document.getElementById('display').scrollLeft + 500 - X_OFFSET) / (1 + diff) + X_OFFSET - 500;
+	document.getElementById('display').scrollLeft = pos;
+});
+
+
+/**
+ * 拡大ボタンが押されたときの処理
+ */
+document.getElementById('plusButton').addEventListener('click', function(){
+	let diff = (widthAmp < 3.0) ? 0.1 : 0;
+	widthAmp += diff;
+	heightAmp += diff;
 	drawScore();
 	let pos = (1 + diff) * (document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
 	document.getElementById('display').scrollLeft = pos;
