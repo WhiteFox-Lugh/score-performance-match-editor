@@ -34,6 +34,7 @@ let matchEventsArray = [];
 let matchCommentsArray = [];
 let missingNotesArray = [];
 let idToFmtPos = new Map();
+let missingIDSet = new Set();
 
 
 /**
@@ -45,7 +46,6 @@ function readFmtFile(file){
 	const VERSION = "//Fmt3xVersion:";
 	const DUPLICATE = "//DuplicateOnsets:";
 	const FMTVERSION = "170225";
-	const NOTES_COLUMNS = 12; // 1行あたりの最低要素数
 
 	let reader = new FileReader();
 	reader.readAsText(file);
@@ -141,27 +141,6 @@ function readMatchFile(file){
 
 
 /**
- * ノートの色を決定する
- * @param {Number} channel チャンネル番号
- */
-function channelToColor(channel){
-	if (channel == 0){return "background-color:rgba(50,255,0,0.4); color:black;";}
-	else if (channel == 1){return "background-color:rgba(255,120,30,0.4); color:blue;";}
-	else if (channel == 2){return "background-color:rgba(255,30,120,0.4); color:aqua;";}
-	else if (channel == 3){return "background-color:rgba(30,120,255,0.4); color:aqua;";}
-	else if (channel == 4){return "background-color:rgba(120,30,120,0.4); color:aqua;";}
-	else if (channel == 5){return "background-color:rgba(255,255,30,0.4); color:aqua;";}
-	else if (channel == 6){return "background-color:rgba(30,255,255,0.4); color:aqua;";}
-	else if (channel == 7){return "background-color:rgba(255,30,30,0.4); color:aqua;";}
-	else if (channel == 8){return "background-color:rgba(120,30,30,0.4); color:aqua;";}
-	else if (channel == 9){return "background-color:rgba(120,180,0,0.4); color:aqua;";}
-	else if (channel == 10){return "background-color:rgba(30,180,180,0.4); color:aqua;";}
-	else if (channel == 11){return "background-color:rgba(255,180,180,0.4); color:aqua;";}
-	else {return "background-color:rgba(120,120,120,0.4); color:white;";}
-}
-
-
-/**
  * 五線譜を描く
  * @param {*} mysvg HTML 内の mysvg
  */
@@ -219,10 +198,10 @@ function drawScoreBase(mysvg){
 		let lineTopFmt = Y_OFFSET_FMT3X - LEGER_WIDTH;
 		let lineTopMatch = Y_OFFSET_MATCH - LEGER_WIDTH;
 		let lineHeight = 12 * HEIGHT_UNIT;
-		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopFmt+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,0.4);"></div>';
-		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopFmt - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,0.4); font-size:8pt">'+t+'</div>';
-		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopMatch+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,0.4);"></div>';
-		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopMatch - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,0.4); font-size:8pt">'+t+'</div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopFmt+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,1);"></div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopFmt - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,1); font-size:10pt">'+t+'</div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopMatch+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,1);"></div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopMatch - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,1); font-size:8pt">'+t+'</div>';
 	}
 	
 	// ト音記号とヘ音記号の描画
@@ -440,33 +419,27 @@ function drawFmtLedgerLine(sitchHeight, leftPos){
 /**
  * 楽譜上に fmt のノートをセットする
  */
-function setFmtNote(onLine, offLine, onPos, offPos, ditchHeight, accidental, onvel, yOffset, errInd, fmtID){
+function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmtID, isMissingNote){
 	let ret = "";
-
-	if (onLine == offLine){
-		// 臨時線の描画
-		ret += drawFmtLedgerLine(ditchHeight, onPos);
-		// ノートの描画
-		let noteTopPos = onLine * HEIGHT_PER_LINE + yOffset + 5 * HEIGHT_UNIT -
-						 0.5 * HEIGHT_UNIT * (ditchHeight + 1);
-		let noteWidth = offPos - onPos + 1;
-		// map に座標を入れておく (fmtID -> (onPos_x, onPos_y))
-		let fmtPos = [onPos, noteTopPos + HEIGHT_UNIT];
-		idToFmtPos.set(fmtID, fmtPos);
-
-		// 色は暫定で固定（あとで変更）
-		let noteColor = "background-color:rgba(255,80,180,0.4);"
-
-		ret += '<div style="position:absolute; left:'+onPos+'px; top:'+noteTopPos+'px; width:'+(noteWidth-1)+'px; height:'+(HEIGHT_UNIT-1)+'px; border:1px solid rgba(20,20,20,0.7);"></div>';
-		ret += '<div contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos + 0.5)+'px; width:'+(noteWidth)+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:7px;"></div>';
-		ret += '<div id="fmt'+fmtID+'" contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos + 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+fmtID+'</div>';
-
-		// 臨時記号
-		let accidentalLeftPos = onPos;
-		let accidentalTopPosBase = -(1 + ditchHeight) * 5 + HEIGHT_C4_FMT - 1;
-		ret += drawAccidentalMark(accidental, accidentalLeftPos, accidentalTopPosBase);
-	}
-
+	// 臨時線の描画
+	ret += drawFmtLedgerLine(ditchHeight, onPos);
+	// ノートの描画
+	let noteTopPos = onLine * HEIGHT_PER_LINE + yOffset + 5 * HEIGHT_UNIT -
+					 0.5 * HEIGHT_UNIT * (ditchHeight + 1);
+	let noteWidth = offPos - onPos + 1;
+	// map に座標を入れておく (fmtID -> (onPos_x, onPos_y))
+	let fmtPos = [onPos, noteTopPos + HEIGHT_UNIT];
+	idToFmtPos.set(fmtID, fmtPos);
+	// 色は暫定で固定
+	let frame = isMissingNote ? "border:3px solid rgba(255,20,255,1);" : "border:1px solid rgba(20,20,20,0.7);";
+	let noteColor = "background-color:rgba(255,80,180,0.4);"
+	let frameDiff = isMissingNote ? 3 : 1;
+	ret += '<div style="position:absolute; contentEditable=true; left:'+(onPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
+	ret += '<div id="fmt'+fmtID+'" contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+fmtID+'</div>';
+	// 臨時記号
+	let accidentalLeftPos = onPos;
+	let accidentalTopPosBase = -(1 + ditchHeight) * 5 + HEIGHT_C4_FMT - 1;
+	ret += drawAccidentalMark(accidental, accidentalLeftPos, accidentalTopPosBase);
 	return ret;
 }
 
@@ -514,29 +487,14 @@ function setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime,
 		let offPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
 					(minTRef + (fmtSTime + fmtDur - minSTime) * tempo);
 
+		// missing かどうかのチェック
+		let isMissingNote = missingIDSet.has(fmtID);
+		console.log(fmtID, isMissingNote);
+
 		// 描画
-		ret += setFmtNote(0, 0, onPos, offPos, ditchHeight, acc, 100, Y_OFFSET_FMT3X, -2, fmtID);
+		ret += setFmtNote(0, onPos, offPos, ditchHeight, acc, Y_OFFSET_FMT3X, fmtID, isMissingNote);
 	}
 
-	return ret;
-}
-
-
-/**
- * match line に色を付ける（音によって変える）
- * @param {*} i 
- */
-function setMatchLineColor(i){
-	let n = (i % 7 < 0) ? ((i % 7) + 7) : (i % 7 + 0);
-	let ret = "";
-	if (n == 0){ret = "#CC00CC";}
-	else if(n == 1){ret = "#6600CC";}
-	else if(n == 2){ret = "#3366CC";}
-	else if(n == 3){ret = "#339900";}
-	else if(n == 4){ret = "#CC9900";}
-	else if(n == 5){ret = "#CC6600";}
-	else if(n == 6){ret = "#CC0000";}
-	else {ret = "#000000"}
 	return ret;
 }
 
@@ -600,9 +558,12 @@ function drawFmtNote(){
 		let matchOfftime = matchEventsArray[i].offTime;
 		endTime = Math.max(endTime, matchOnTime, matchOfftime);
 	}
-	let numOfLine = Math.floor(endTime / SEC_PER_LINE) + 1;
-	let widthLast = Math.floor((PX_PER_SEC * widthAmp) * (endTime - Math.floor(endTime / SEC_PER_LINE) * SEC_PER_LINE)) + 4 * X_OFFSET;
-	let height = numOfLine * HEIGHT_PER_LINE;
+
+	// missing note の map 作成
+	for (let i = 0; i < missingNotesArray.length; i++){
+		let missingID = missingNotesArray[i].fmtID;
+		missingIDSet.add(missingID);
+	}
 
 	// perfmSegmentIds の取得
 	let segmentIds = fmtGetSetmentIds();
@@ -735,7 +696,7 @@ function drawMatchNote(){
 		let noteWidth = (matchOfftime - matchOntime) * (PX_PER_SEC * widthAmp);
 		let noteColor = channelToColor(matchChannel);
 
-		ret += '<div style="position:absolute; left:'+(noteLeftPos - 1)+'px; top:'+(noteTopPos - 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; border:1px solid rgba(20,20,20,0.7);"></div>';
+		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - 1)+'px; top:'+(noteTopPos - 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; border:1px solid rgba(20,20,20,0.7);"></div>';
 		ret += '<div id="match'+matchID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos + 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+matchFmtID+'</div>';
 
 		// 臨時記号の描画
@@ -763,8 +724,9 @@ function drawScore(){
 	let lineStr = drawScoreBase(mysvg);
 	str += lineStr;
 
-	// match line のマップの初期化
+	// マップの初期化
 	idToFmtPos.clear();
+	missingIDSet.clear();
 
 	// match 系の描画
 	if (matchEventsArray.length > 0){
@@ -807,7 +769,7 @@ $("#filein2").change(function(event){
 });
 
 
-document.getElementById('minusButton').addEventListener('click', function(){
+document.getElementById('enlargeButton').addEventListener('click', function(){
 	let diff = (widthAmp > 0.5) ? 0.1 : 0;
 	widthAmp -= diff;
 	drawScore();
@@ -816,7 +778,7 @@ document.getElementById('minusButton').addEventListener('click', function(){
 });
 
 
-document.getElementById('plusButton').addEventListener('click', function(){
+document.getElementById('shrinkButton').addEventListener('click', function(){
 	let diff = (widthAmp < 3.0) ? 0.1 : 0;
 	widthAmp += diff;
 	drawScore();
