@@ -285,7 +285,7 @@ function fmtGetSetmentIds(){
 
 
 /**
- * error region を得る
+ * error indicator から error region を得る
  */
 function fmtGetErrorRegions(){
 	const MATCH_EVENT_LENGTH = matchEventsArray.length;
@@ -332,7 +332,7 @@ function getFmtOrnamentedErrorRegions(drawedScores, minTRef, minSTime, tempo){
 
 
 /**
- * missing note の error region
+ * missing note の error region を取得
  * @param {*} minTref 
  * @param {*} minSTime 
  * @param {*} tempo 
@@ -354,6 +354,11 @@ function fmtMissingNoteErrorRegions(minTRef, minSTime, maxSTime, tempo){
 }
 
 
+
+/**
+ * error region の描画
+ * @param {*} errorRegions 
+ */
 function drawErrorRegions(errorRegions){
 	// 色は固定
 	const REGION_COLOR = "background-color:rgba(255,255,0,0.15);"
@@ -417,6 +422,23 @@ function drawFmtLedgerLine(sitchHeight, leftPos){
 
 
 /**
+ * 楽譜表示用に ID を短縮する
+ * @param {*} str 
+ */
+function simplifyFmtID(str){
+	let ret = "";
+	if (str[0] == "*" || str[0] == "&"){ret = str;}
+	else if (str.substring(0, str.indexOf("-")) == "P1"){
+		ret = str.substring(str.indexOf('-') + 1, str.length);
+	}
+	else {
+		ret = str;
+	}
+	return ret;
+}
+
+
+/**
  * 楽譜上に fmt のノートをセットする
  */
 function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmtID, isMissingNote){
@@ -434,8 +456,9 @@ function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmt
 	let frame = setFrameColor(isMissingNote ? -2 : 0);
 	let noteColor = "background-color:rgba(255,80,180,0.4);"
 	let frameDiff = isMissingNote ? 3 : 1;
+	let simpleID = simplifyFmtID(fmtID);
 	ret += '<div style="position:absolute; contentEditable=true; left:'+(onPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
-	ret += '<div id="fmt'+fmtID+'" contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+fmtID+'</div>';
+	ret += '<div id="fmt'+fmtID+'" contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+simpleID+'</div>';
 	// 臨時記号
 	let accidentalLeftPos = onPos;
 	let accidentalTopPosBase = -(1 + ditchHeight) * 5 + HEIGHT_C4_FMT - 1;
@@ -699,8 +722,9 @@ function drawMatchNote(){
 		// 色は暫定で固定
 		let frame = setFrameColor(matchErrorInd);
 		let frameDiff = (matchErrorInd > 0) ? 3 : 1;
+		let simpleID = simplifyFmtID(matchFmtID);
 		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
-		ret += '<div id="fmt'+matchFmtID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+matchFmtID+'</div>';
+		ret += '<div id="fmt'+matchFmtID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+simpleID+'</div>';
 
 		// 臨時記号の描画
 		let accidental = sitchToAcc(matchSitch);
