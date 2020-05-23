@@ -36,3 +36,26 @@ function channelToColor(channel){
 	else if (channel == 11){return "background-color:rgba(255,180,180,0.4); color:aqua;";}
 	else {return "background-color:rgba(120,120,120,0.4); color:white;";}
 }
+
+
+/**
+ * match の error indicator (errorInd)の値によって枠の色と太さを変更
+ * -2 : Missing Note
+ * -1 : Unmatched?
+ * 0 : correct
+ * 1 : pitch error
+ * 2 : Extra note (note-wise)
+ * 3 : Extra note (cluster-wise)
+ * 4, 5: 未実装
+ * @param {*} i 
+ */
+function setFrameColor(i){
+    let ret = "";
+    if (i == -2){ret = "border:3px solid rgba(255,20,255,1);";}
+    else if (i == -1){ret = "border:3px solid rgba(200,100,50,1);";}
+    else if (i == 1){ret = "border:3px solid rgba(255,69,0,1);";}
+    else if (i == 2){ret = "border:3px solid rgba(0,255,0,1);";}
+    else if (i == 3){ret = "border:3px solid rgba(0,255,255,1);";}
+    else {ret = "border:1px solid rgba(20,20,20,1);";}
+    return ret;
+}

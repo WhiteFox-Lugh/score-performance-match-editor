@@ -431,7 +431,7 @@ function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmt
 	let fmtPos = [onPos, noteTopPos + HEIGHT_UNIT];
 	idToFmtPos.set(fmtID, fmtPos);
 	// 色は暫定で固定
-	let frame = isMissingNote ? "border:3px solid rgba(255,20,255,1);" : "border:1px solid rgba(20,20,20,0.7);";
+	let frame = setFrameColor(isMissingNote ? -2 : 0);
 	let noteColor = "background-color:rgba(255,80,180,0.4);"
 	let frameDiff = isMissingNote ? 3 : 1;
 	ret += '<div style="position:absolute; contentEditable=true; left:'+(onPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
@@ -664,9 +664,9 @@ function drawMatchNote(){
 		let matchSitch = matchEvent.sitch;
 		let matchOntime = matchEvent.onTime;
 		let matchOfftime = matchEvent.offTime;
-		let matchID = matchEvent.ID;
-		let matchChannel = matchEvent.channel;
 		let matchFmtID = matchEvent.fmtID;
+		let matchChannel = matchEvent.channel;
+		let matchErrorInd = matchEvent.errorInd;
 
 		// 音名から楽譜上での縦の位置を決定
 		let sitchHeight = sitchToSitchHeight(matchSitch);
@@ -696,8 +696,11 @@ function drawMatchNote(){
 		let noteWidth = (matchOfftime - matchOntime) * (PX_PER_SEC * widthAmp);
 		let noteColor = channelToColor(matchChannel);
 
-		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - 1)+'px; top:'+(noteTopPos - 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; border:1px solid rgba(20,20,20,0.7);"></div>';
-		ret += '<div id="match'+matchID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos + 0.5)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+matchFmtID+'</div>';
+		// 色は暫定で固定
+		let frame = setFrameColor(matchErrorInd);
+		let frameDiff = (matchErrorInd > 0) ? 3 : 1;
+		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
+		ret += '<div id="fmt'+matchFmtID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+matchFmtID+'</div>';
 
 		// 臨時記号の描画
 		let accidental = sitchToAcc(matchSitch);
