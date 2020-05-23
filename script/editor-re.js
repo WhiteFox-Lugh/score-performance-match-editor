@@ -3,21 +3,21 @@ const PX_PER_SEC = 200;
 const X_OFFSET = 100; // X 座標左端
 const TAB = String.fromCharCode(9);
 const SPACE = String.fromCharCode(32);
-
-// fmt3x 描画関連定数
 const SEC_PER_LINE = 9999;
-const GRACE_NOTE_DURATION = 0.07;
+const GRACE_NOTE_DURATION = 0.070;
+const REGION_DIFF = 0.30;
+const EPS = 1e-6;
+const MAX_WIDTH_AMP = 3.0;
+const MIN_WIDTH_AMP = 0.50;
+const MAX_HEIGHT_AMP = 3.0;
+const MIN_HEIGHT_AMP = 0.50;
 
-// match 描画関連定数
-const REGION_DIFF = 0.3;
-
-// 描画関連
-let heightUnit = 10;
-let widthAmp = 1.0;
-let heightAmp = 1.0;
+let widthAmp = 1.0; // 横の拡大倍率
+let heightAmp = 1.0; // 縦の拡大倍率
+let heightUnit = 10; // 五線譜の間隔
 let amplifiedWidth = PX_PER_SEC * widthAmp;
 let yOffsetFmt3x = 50; // 五線譜の Y 座標上端（fmt3x） 
-let yOffsetMatch = 253; // 五線譜の Y 座標上端（match）
+let yOffsetMatch = 250; // 五線譜の Y 座標上端（match）
 let heightPerLine = 3 * yOffsetFmt3x + 20 * heightUnit; // widthLast にあたる const
 let heightC4Fmt = 100; // C4 の位置(ト音記号の場合)
 let heightC4Match = 303; // C4 の位置(ト音記号の場合)
@@ -775,6 +775,18 @@ function setOffsetValue(){
 
 
 /**
+ * 倍率のパーセント表示部分の値の変更
+ */
+function showAmp(){
+	let widthPercentage = Math.floor(widthAmp * 100);
+	let heightPercentage = Math.floor(heightAmp * 100);
+	$("#widthAmp").text("Width: " + widthPercentage + " %");
+	$("#heightAmp").text("Height: " + heightPercentage + " %");
+	return;
+}
+
+
+/**
  * fmt3x ファイル読み込み
  */
 $("#filein1").change(function(event){
@@ -782,6 +794,9 @@ $("#filein1").change(function(event){
 	let fileName = txtFile.name;
 	widthAmp = 1.0;
 	heightAmp = 1.0;
+	showAmp();
+	setOffsetValue();
+	drawScore();
 	readFmtFile(txtFile);
 	document.getElementById('filename1').value = fileName;
 });
@@ -795,6 +810,9 @@ $("#filein2").change(function(event){
 	let fileName = txtFile.name;
 	widthAmp = 1.0;
 	heightAmp = 1.0;
+	showAmp();
+	setOffsetValue();
+	drawScore();
 	readMatchFile(txtFile);
 	document.getElementById('filename2').value = fileName;
 });
@@ -804,8 +822,9 @@ $("#filein2").change(function(event){
  * 横幅縮小ボタンが押されたときの処理
  */
 document.getElementById('shrinkButton').addEventListener('click', function(){
-	let diff = (widthAmp > 0.5) ? 0.1 : 0;
+	let diff = (widthAmp > MIN_WIDTH_AMP + EPS) ? 0.1 : 0;
 	widthAmp -= diff;
+	showAmp();
 	setOffsetValue();
 	drawScore();
 	let pos = (document.getElementById('display').scrollLeft + 500 - X_OFFSET) / (1 + diff) + X_OFFSET - 500;
@@ -817,8 +836,9 @@ document.getElementById('shrinkButton').addEventListener('click', function(){
  * 横幅拡大ボタンが押されたときの処理
  */
 document.getElementById('enlargeButton').addEventListener('click', function(){
-	let diff = (widthAmp < 3.0) ? 0.1 : 0;
+	let diff = (widthAmp < MAX_WIDTH_AMP - EPS) ? 0.1 : 0;
 	widthAmp += diff;
+	showAmp();
 	setOffsetValue();
 	drawScore();
 	let pos = (1 + diff) * (document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
@@ -830,10 +850,11 @@ document.getElementById('enlargeButton').addEventListener('click', function(){
  * 縮小ボタンが押されたときの処理
  */
 document.getElementById('minusButton').addEventListener('click', function(){
-	let diff = (widthAmp > 0.5) ? 0.1 : 0;
+	let diff = (widthAmp > MIN_WIDTH_AMP + EPS) ? 0.1 : 0;
 	widthAmp -= diff;
-	let diff_height = (heightAmp > 0.5) ? 0.1 : 0;
+	let diff_height = (heightAmp > MIN_HEIGHT_AMP + EPS) ? 0.1 : 0;
 	heightAmp -= diff_height;
+	showAmp();
 	setOffsetValue();
 	drawScore();
 	let pos = (document.getElementById('display').scrollLeft + 500 - X_OFFSET) / (1 + diff) + X_OFFSET - 500;
@@ -845,10 +866,11 @@ document.getElementById('minusButton').addEventListener('click', function(){
  * 拡大ボタンが押されたときの処理
  */
 document.getElementById('plusButton').addEventListener('click', function(){
-	let diff = (widthAmp < 3.0) ? 0.1 : 0;
+	let diff = (widthAmp < MAX_WIDTH_AMP - EPS) ? 0.1 : 0;
 	widthAmp += diff;
-	let diff_height = (heightAmp < 3.0) ? 0.1 : 0;
+	let diff_height = (heightAmp < MAX_HEIGHT_AMP - EPS) ? 0.1 : 0;
 	heightAmp += diff_height;
+	showAmp();
 	setOffsetValue();
 	drawScore();
 	let pos = (1 + diff) * (document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
