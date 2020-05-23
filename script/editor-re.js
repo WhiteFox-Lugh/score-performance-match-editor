@@ -1,4 +1,4 @@
-const LEGER_WIDTH = 1;
+const LEGER_WIDTH = 0.5;
 const PX_PER_SEC = 200;
 const X_OFFSET = 100; // X 座標左端
 const Y_OFFSET_FMT3X = 50; // 五線譜の Y 座標上端（fmt3x） 
@@ -492,6 +492,58 @@ function setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime,
 }
 
 
+function setMatchLineColor(i){
+	let n = (i % 7 < 0) ? ((i % 7) + 7) : (i % 7 + 0);
+	let ret = "";
+	if (n == 0){ret = "#CC00CC";}
+	else if(n == 1){ret = "#6600CC";}
+	else if(n == 2){ret = "#3366CC";}
+	else if(n == 3){ret = "#339900";}
+	else if(n == 4){ret = "#CC9900";}
+	else if(n == 5){ret = "#CC6600";}
+	else if(n == 6){ret = "#CC0000";}
+	else {ret = "#000000"}
+	return ret;
+}
+
+
+/**
+ * matching line の描画
+ */
+function drawMatchLine(){
+	for (let i = 0; i < matchEventsArray.length; i++){
+		let matchEvt = matchEventsArray[i];
+		let evtID = matchEvt.fmtID;
+		let evtOnTime = matchEvt.onTime;
+		let matchSitch = matchEvt.sitch;
+		let sitchHeight = sitchToSitchHeight(matchSitch);
+		let scoreNotePos;
+		if (!idToFmtPos.has(evtID) || evtID.match("\\*") || evtID.match("\\&")){
+			continue;
+		}
+		scoreNotePos = idToFmtPos.get(evtID);
+		let fmtXPos = scoreNotePos[0];
+		let fmtYPos = scoreNotePos[1];
+		let matchXPos = X_OFFSET + (PX_PER_SEC * widthAmp) * evtOnTime;
+		let matchYPos = -(1 + sitchHeight) * 5 + HEIGHT_C4_MATCH + HEIGHT_UNIT;
+		let horizontalLen = Math.floor(0.6 * STAFF_LINE_SPACE);
+		let p1 = (fmtXPos + horizontalLen) + "," + fmtYPos;
+		let p2 = fmtXPos + "," + fmtYPos;
+		let p3 = matchXPos + "," + matchYPos;
+		let p4 = (matchXPos + horizontalLen) + "," + matchYPos;
+		let pStr = p1 + " " + p2 + " " + p3 + " " + p4;
+		let matchLine = document.createElementNS('http://www.w3.org/2000/svg','polyline');
+		matchLine.setAttribute('points', pStr);
+		matchLine.setAttribute('fill', 'none');
+		matchLine.setAttribute('stroke', setMatchLineColor(sitchHeight));
+		matchLine.setAttribute('stroke-width', LEGER_WIDTH);
+		matchLine.setAttribute('id', 'matchline-' + evtID);
+		mysvg.appendChild(matchLine);
+	}
+	return;
+}
+
+
 /**
  * fmt3x の楽譜のノートを描画する一連の手順からなる関数
  */
@@ -592,35 +644,7 @@ function drawFmtNote(){
 	}
 	
 	// matching line の描画
-	for (let i = 0; i < matchEventSize; i++){
-		let matchEvt = matchEventsArray[i];
-		let evtID = matchEvt.fmtID;
-		let evtOnTime = matchEvt.onTime;
-		let matchSitch = matchEvt.sitch;
-		let sitchHeight = sitchToSitchHeight(matchSitch);
-		let scoreNotePos;
-		if (!idToFmtPos.has(evtID) || evtID.match("\\*") || evtID.match("\\&")){
-			continue;
-		}
-		scoreNotePos = idToFmtPos.get(evtID);
-		let fmtXPos = scoreNotePos[0];
-		let fmtYPos = scoreNotePos[1];
-		let matchXPos = X_OFFSET + (PX_PER_SEC * widthAmp) * evtOnTime;
-		let matchYPos = -(1 + sitchHeight) * 5 + HEIGHT_C4_MATCH + HEIGHT_UNIT;
-		let horizontalLen = Math.floor(0.6 * STAFF_LINE_SPACE);
-		let p1 = (fmtXPos + horizontalLen) + "," + fmtYPos;
-		let p2 = fmtXPos + "," + fmtYPos;
-		let p3 = matchXPos + "," + matchYPos;
-		let p4 = (matchXPos + horizontalLen) + "," + matchYPos;
-		let pStr = p1 + " " + p2 + " " + p3 + " " + p4;
-		let matchLine = document.createElementNS('http://www.w3.org/2000/svg','polyline');
-		matchLine.setAttribute('points', pStr);
-		matchLine.setAttribute('fill', 'none');
-		matchLine.setAttribute('stroke','#ff8800');
-		matchLine.setAttribute('stroke-width', '2');
-		matchLine.setAttribute('id', 'matchline-' + evtID);
-		mysvg.appendChild(matchLine);
-	}
+	drawMatchLine();
 	ret += mysvg;
 
 	// error region 関連
@@ -756,6 +780,7 @@ document.getElementById('minusButton').addEventListener('click', function(){
 	let pos = (document.getElementById('display').scrollLeft + 500 - X_OFFSET) / (1 + diff) + X_OFFSET - 500;
 	document.getElementById('display').scrollLeft = pos;
 });
+
 
 document.getElementById('plusButton').addEventListener('click', function(){
 	let diff = (widthAmp < 3.0) ? 0.1 : 0;
