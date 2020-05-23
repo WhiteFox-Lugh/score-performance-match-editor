@@ -12,17 +12,18 @@ const GRACE_NOTE_DURATION = 0.07;
 const REGION_DIFF = 0.3;
 
 // 描画関連
-const HEIGHT_UNIT = 10;
+let heightUnit = 10;
 let widthAmp = 1.0;
 let heightAmp = 1.0;
+let amplifiedWidth = PX_PER_SEC * widthAmp;
 let yOffsetFmt3x = 50; // 五線譜の Y 座標上端（fmt3x） 
 let yOffsetMatch = 253; // 五線譜の Y 座標上端（match）
-let HEIGHT_PER_LINE = 3 * yOffsetFmt3x + 20 * HEIGHT_UNIT; // widthLast にあたる const
-let heightC4Match = 303;
-let STAFF_LINE_SPACE = 20; // 五線譜の上段と下段の間隔
-let heightC4Fmt = 100;
+let heightPerLine = 3 * yOffsetFmt3x + 20 * heightUnit; // widthLast にあたる const
+let heightC4Fmt = 100; // C4 の位置(ト音記号の場合)
+let heightC4Match = 303; // C4 の位置(ト音記号の場合)
+let staffLineSpace = 20; // 五線譜の上段と下段の間隔
 let maxTime = 2.1;
-let windowWidth = X_OFFSET + maxTime * (PX_PER_SEC * widthAmp);
+let windowWidth = X_OFFSET + maxTime * amplifiedWidth;
 let fmtEventsArray = [];
 let fmtCommentsArray = [];
 let fmtVersion = "";
@@ -143,7 +144,7 @@ function readMatchFile(file){
  */
 function drawScoreBase(mysvg){
 	const LINE_START_X = 0;
-	let width = X_OFFSET + maxTime * (PX_PER_SEC * widthAmp);
+	let width = X_OFFSET + maxTime * amplifiedWidth;
 	let ret = "";
 
 	// 五線譜の描画部分
@@ -152,8 +153,8 @@ function drawScoreBase(mysvg){
 		let fmt3xUpperLine = document.createElementNS('http://www.w3.org/2000/svg','line');
 		fmt3xUpperLine.setAttribute('x1', LINE_START_X);
 		fmt3xUpperLine.setAttribute('x2', width);
-		fmt3xUpperLine.setAttribute('y1', yOffsetFmt3x + HEIGHT_UNIT * i);
-		fmt3xUpperLine.setAttribute('y2', yOffsetFmt3x + HEIGHT_UNIT * i);
+		fmt3xUpperLine.setAttribute('y1', yOffsetFmt3x + heightUnit * i);
+		fmt3xUpperLine.setAttribute('y2', yOffsetFmt3x + heightUnit * i);
 		fmt3xUpperLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
 		fmt3xUpperLine.setAttribute('stroke-width', 1);
 		mysvg.appendChild(fmt3xUpperLine);
@@ -161,8 +162,8 @@ function drawScoreBase(mysvg){
 		let fmt3xLowerLine = document.createElementNS('http://www.w3.org/2000/svg','line');
 		fmt3xLowerLine.setAttribute('x1', LINE_START_X);
 		fmt3xLowerLine.setAttribute('x2', width);
-		fmt3xLowerLine.setAttribute('y1', yOffsetFmt3x + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
-		fmt3xLowerLine.setAttribute('y2', yOffsetFmt3x + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
+		fmt3xLowerLine.setAttribute('y1', yOffsetFmt3x + staffLineSpace + heightUnit * (i + 5));
+		fmt3xLowerLine.setAttribute('y2', yOffsetFmt3x + staffLineSpace + heightUnit * (i + 5));
 		fmt3xLowerLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
 		fmt3xLowerLine.setAttribute('stroke-width', 1);
 		mysvg.appendChild(fmt3xLowerLine);
@@ -170,8 +171,8 @@ function drawScoreBase(mysvg){
 		let matchUpperLine = document.createElementNS('http://www.w3.org/2000/svg','line');
 		matchUpperLine.setAttribute('x1', LINE_START_X);
 		matchUpperLine.setAttribute('x2', width);
-		matchUpperLine.setAttribute('y1', yOffsetMatch + HEIGHT_UNIT * i);
-		matchUpperLine.setAttribute('y2', yOffsetMatch + HEIGHT_UNIT * i);
+		matchUpperLine.setAttribute('y1', yOffsetMatch + heightUnit * i);
+		matchUpperLine.setAttribute('y2', yOffsetMatch + heightUnit * i);
 		matchUpperLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
 		matchUpperLine.setAttribute('stroke-width', 1);
 		mysvg.appendChild(matchUpperLine);
@@ -179,31 +180,32 @@ function drawScoreBase(mysvg){
 		let matchLowerLine = document.createElementNS('http://www.w3.org/2000/svg','line');
 		matchLowerLine.setAttribute('x1', LINE_START_X);
 		matchLowerLine.setAttribute('x2', width);
-		matchLowerLine.setAttribute('y1', yOffsetMatch + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
-		matchLowerLine.setAttribute('y2', yOffsetMatch + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
+		matchLowerLine.setAttribute('y1', yOffsetMatch + staffLineSpace + heightUnit * (i + 5));
+		matchLowerLine.setAttribute('y2', yOffsetMatch + staffLineSpace + heightUnit * (i + 5));
 		matchLowerLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
 		matchLowerLine.setAttribute('stroke-width', 1);
 		mysvg.appendChild(matchLowerLine);
 	}
 	// 小節線と小節番号の描画
 	for(let t = 0; t < maxTime; t++){
-		let lineLeft = t * (PX_PER_SEC * widthAmp) + X_OFFSET;
-		let lineTopFmt = yOffsetFmt3x - LEGER_WIDTH;
-		let lineTopMatch = yOffsetMatch - LEGER_WIDTH;
-		let lineHeight = 12 * HEIGHT_UNIT;
+		let lineLeft = t * amplifiedWidth + X_OFFSET;
+		let lineTopFmt = yOffsetFmt3x - LEGER_WIDTH * heightAmp;
+		let lineTopMatch = yOffsetMatch - LEGER_WIDTH * heightAmp;
+		let lineHeight = 12 * heightUnit;
+		let fontSize = 10 * heightAmp;
 		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopFmt+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,0.3);"></div>';
-		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopFmt - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,1); font-size:10pt">'+t+'</div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopFmt - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,1); font-size:'+fontSize+'px">'+t+'</div>';
 		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopMatch+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,0.3);"></div>';
-		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopMatch - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,1); font-size:8pt">'+t+'</div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopMatch - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,1); font-size:'+fontSize+'px">'+t+'</div>';
 	}
 	
 	// ト音記号とヘ音記号の描画
-	let gclefHeight = 7.5 * HEIGHT_UNIT;
-	let fclefHeight = 3.4 * HEIGHT_UNIT;
-	let gclefTopFmt = heightC4Fmt - 6.5 * HEIGHT_UNIT;
-	let fclefTopFmt = heightC4Fmt + 1.9 * HEIGHT_UNIT;
-	let gclefTopMatch = heightC4Match - 6.5 * HEIGHT_UNIT;
-	let fclefTopMatch = heightC4Match + 1.9 * HEIGHT_UNIT;
+	let gclefHeight = 7.5 * heightUnit;
+	let fclefHeight = 3.4 * heightUnit;
+	let gclefTopFmt = heightC4Fmt - 6.5 * heightUnit;
+	let fclefTopFmt = heightC4Fmt + 1.9 * heightUnit;
+	let gclefTopMatch = heightC4Match - 6.5 * heightUnit;
+	let fclefTopMatch = heightC4Match + 1.9 * heightUnit;
 	ret += '<img src="img/Gclef.png" height='+gclefHeight+' style="position:absolute; left:5px; top:'+gclefTopFmt+'px;"/>';
 	ret += '<img src="img/Fclef.png" height='+fclefHeight+' style="position:absolute; left:8px; top:'+fclefTopFmt+'px;"/>';
 	ret += '<img src="img/Gclef.png" height='+gclefHeight+' style="position:absolute; left:5px; top:'+gclefTopMatch+'px;"/>';
@@ -222,16 +224,16 @@ function drawScoreBase(mysvg){
 function drawAccidentalMark(accidental, leftPos, topPos){
 	let ret = "";
 	if (accidental == 1){
-		ret += '<img src="img/Sharp.png" height="'+(2 * HEIGHT_UNIT)+'" style="position:absolute; left:'+(leftPos - 9)+'px; top:'+(topPos - 0.4 * HEIGHT_UNIT)+'px;"/>';
+		ret += '<img src="img/Sharp.png" height="'+(2 * heightUnit)+'" style="position:absolute; left:'+(leftPos - 9)+'px; top:'+(topPos - 0.4 * heightUnit)+'px;"/>';
 	}
 	else if (accidental == 2){
-		ret += '<img src="img/DoubleSharp.png" height="'+HEIGHT_UNIT+'" style="position:absolute; left:'+(leftPos - 12)+'px; top:'+(topPos - 1 + 0.1 * HEIGHT_UNIT)+'px;"/>';
+		ret += '<img src="img/DoubleSharp.png" height="'+heightUnit+'" style="position:absolute; left:'+(leftPos - 12)+'px; top:'+(topPos - 1 + 0.1 * heightUnit)+'px;"/>';
 	}
 	else if (accidental == -1){
-		ret += '<img src="img/Flat.png" height="'+(1.7 * HEIGHT_UNIT)+'" style="position:absolute; left:'+(leftPos - 9)+'px; top:'+(topPos - 0.5 - 0.6 * HEIGHT_UNIT)+'px;"/>';
+		ret += '<img src="img/Flat.png" height="'+(1.7 * heightUnit)+'" style="position:absolute; left:'+(leftPos - 9)+'px; top:'+(topPos - 0.5 - 0.6 * heightUnit)+'px;"/>';
 	}
 	else if (accidental == -2){
-		ret += '<img src="img/DoubleFlat.png" height="'+(1.7 * HEIGHT_UNIT)+'" style="position:absolute; left:'+(leftPos - 14)+'px; top:'+(topPos - 1 - 0.6 * HEIGHT_UNIT)+'px;"/>';
+		ret += '<img src="img/DoubleFlat.png" height="'+(1.7 * heightUnit)+'" style="position:absolute; left:'+(leftPos - 14)+'px; top:'+(topPos - 1 - 0.6 * heightUnit)+'px;"/>';
 	}
 	return ret;
 }
@@ -357,12 +359,12 @@ function drawErrorRegions(errorRegions){
 	for (let item of errorRegions){
 		let t1 = item[0];
 		let t2 = item[1];
-		let leftPos = X_OFFSET + (PX_PER_SEC * widthAmp) * t1;
-		let rightPos = X_OFFSET + (PX_PER_SEC * widthAmp) * t2;
-		let topPos = yOffsetFmt3x - 5 * STAFF_LINE_SPACE;
-		let rectHeight = 25 * STAFF_LINE_SPACE;
+		let leftPos = X_OFFSET + amplifiedWidth * t1;
+		let rightPos = X_OFFSET + amplifiedWidth * t2;
+		let topPos = yOffsetFmt3x - 5 * staffLineSpace;
+		let rectHeight = 25 * staffLineSpace;
 		let rectWidth = rightPos - leftPos;
-		ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:'+rectWidth+'px; height:'+rectHeight+'px; '+REGION_COLOR+' font-size:7px;"></div>';
+		ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:'+rectWidth+'px; height:'+rectHeight+'px; '+REGION_COLOR+'></div>';
 	}
 	return ret;
 }
@@ -398,13 +400,13 @@ function drawFmtLedgerLine(sitchHeight, leftPos){
 	}
 	else if (sitchHeight > 11){
 		for (let h=12, end=sitchHeight;h<=end; h+=2){
-			let topPos = heightC4Fmt - 0.5 * HEIGHT_UNIT * h - LEGER_WIDTH;
+			let topPos = heightC4Fmt - 0.5 * heightUnit * h - LEGER_WIDTH;
 			ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 		}
 	}
 	else if (sitchHeight < -11){
 		for (let h=-12, end=sitchHeight; h>=end; h-=2){
-			let topPos = heightC4Fmt - 0.5 * HEIGHT_UNIT * h - LEGER_WIDTH;
+			let topPos = heightC4Fmt - 0.5 * heightUnit * h - LEGER_WIDTH;
 			ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 		}
 	}
@@ -437,19 +439,20 @@ function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmt
 	// 臨時線の描画
 	ret += drawFmtLedgerLine(ditchHeight, onPos);
 	// ノートの描画
-	let noteTopPos = onLine * HEIGHT_PER_LINE + yOffset + 5 * HEIGHT_UNIT -
-					 0.5 * HEIGHT_UNIT * (ditchHeight + 1);
+	let noteTopPos = onLine * heightPerLine + yOffset + 5 * heightUnit -
+					 0.5 * heightUnit * (ditchHeight + 1);
 	let noteWidth = offPos - onPos + 1;
 	// map に座標を入れておく (fmtID -> (onPos_x, onPos_y))
-	let fmtPos = [onPos, noteTopPos + HEIGHT_UNIT];
+	let fmtPos = [onPos, noteTopPos + heightUnit];
 	idToFmtPos.set(fmtID, fmtPos);
 	// 色は暫定で固定
 	let frame = setFrameColor(isMissingNote ? -2 : 0);
 	let noteColor = "background-color:rgba(255,80,180,0.4);"
 	let frameDiff = isMissingNote ? 3 : 1;
 	let simpleID = simplifyFmtID(fmtID);
-	ret += '<div style="position:absolute; contentEditable=true; left:'+(onPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
-	ret += '<div id="fmt'+fmtID+'" contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:8px;">'+simpleID+'</div>';
+	let fontSize = 7 * heightAmp;
+	ret += '<div style="position:absolute; contentEditable=true; left:'+(onPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+frame+'"></div>';
+	ret += '<div id="fmt'+fmtID+'" contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+noteColor+' font-size:'+fontSize+'px;">'+simpleID+'</div>';
 	// 臨時記号
 	let accidentalLeftPos = onPos;
 	let accidentalTopPosBase = -(1 + ditchHeight) * 5 + heightC4Fmt - 1;
@@ -475,9 +478,9 @@ function drawMatchLine(){
 		scoreNotePos = idToFmtPos.get(evtID);
 		let fmtXPos = scoreNotePos[0];
 		let fmtYPos = scoreNotePos[1];
-		let matchXPos = X_OFFSET + (PX_PER_SEC * widthAmp) * evtOnTime;
-		let matchYPos = -(1 + sitchHeight) * 5 + heightC4Match + HEIGHT_UNIT;
-		let horizontalLen = Math.floor(0.6 * STAFF_LINE_SPACE);
+		let matchXPos = X_OFFSET + amplifiedWidth * evtOnTime;
+		let matchYPos = -(1 + sitchHeight) * 5 * heightAmp + heightC4Match + heightUnit;
+		let horizontalLen = Math.floor(0.6 * staffLineSpace);
 		let p1 = (fmtXPos + horizontalLen) + "," + fmtYPos;
 		let p2 = fmtXPos + "," + fmtYPos;
 		let p3 = matchXPos + "," + matchYPos;
@@ -614,9 +617,9 @@ function drawFmtNote(){
 					let ditchHeight = sitchToSitchHeight(principleDitch);
 					let acc = sitchToAcc(principleDitch);
 					// position の計算
-					let onPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
+					let onPos = X_OFFSET + amplifiedWidth *
 								(minTRef + (fmtSTime - minSTime) * tempo + fmtSubOrder * GRACE_NOTE_DURATION);
-					let offPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
+					let offPos = X_OFFSET + amplifiedWidth *
 								(minTRef + (fmtSTime + fmtDur - minSTime) * tempo);
 					// missing かどうかのチェック
 					let isMissingNote = missingIDSet.has(fmtID);
@@ -635,9 +638,9 @@ function drawFmtNote(){
 					let ditchHeight = sitchToSitchHeight(principleDitch);
 					let acc = sitchToAcc(principleDitch);
 					// position の計算
-					let onPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
+					let onPos = X_OFFSET + amplifiedWidth *
 								(minTRef + (fmtSTime - minSTime) * tempo + fmtSubOrder * GRACE_NOTE_DURATION);
-					let offPos = onPos + (PX_PER_SEC * widthAmp) * GRACE_NOTE_DURATION;
+					let offPos = onPos + amplifiedWidth * GRACE_NOTE_DURATION;
 					// missing かどうかのチェック
 					let isMissingNote = missingIDSet.has(fmtID);
 
@@ -650,7 +653,6 @@ function drawFmtNote(){
 	
 	// matching line の描画
 	drawMatchLine();
-	ret += mysvg;
 
 	// error region 関連
 	let errorRegions = new Region(errorRegionsArray);
@@ -679,38 +681,39 @@ function drawMatchNote(){
 		let sitchHeight = sitchToSitchHeight(matchSitch);
 
 		// 臨時線の有無を判定し、必要なら描画
-		let leftPos = matchOntime * (PX_PER_SEC * widthAmp) + X_OFFSET - 8;
+		let leftPos = matchOntime * amplifiedWidth + X_OFFSET - 8;
 		if (sitchHeight == 0){
 			let topPos = heightC4Match - LEGER_WIDTH;
 			ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 		}
 		else if (sitchHeight > 11){
 			for (let h=12, end=sitchHeight;h<=end; h+=2){
-				let topPos = heightC4Match - 0.5 * HEIGHT_UNIT * h - LEGER_WIDTH;
+				let topPos = heightC4Match - 0.5 * heightUnit * h - LEGER_WIDTH;
 				ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 			}
 		}
 		else if (sitchHeight < -11){
 			for (let h=-12, end=sitchHeight; h>=end; h-=2){
-				let topPos = heightC4Match - 0.5 * HEIGHT_UNIT * h - LEGER_WIDTH;
+				let topPos = heightC4Match - 0.5 * heightUnit * h - LEGER_WIDTH;
 				ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 			}
 		}
 
 		// ノートの描画
-		let noteLeftPos = matchOntime * (PX_PER_SEC * widthAmp) + X_OFFSET;
-		let noteTopPos = -(1 + sitchHeight) * 5 + heightC4Match;
-		let noteWidth = (matchOfftime - matchOntime) * (PX_PER_SEC * widthAmp);
+		let noteLeftPos = matchOntime * amplifiedWidth + X_OFFSET;
+		let noteTopPos = -(1 + sitchHeight) * 5 * heightAmp + heightC4Match;
+		let noteWidth = (matchOfftime - matchOntime) * amplifiedWidth;
 		let noteColor = channelToColor(matchChannel);
 		let frame = setFrameColor(matchErrorInd);
 		let frameDiff = (matchErrorInd > 0) ? 3 : 1;
 		let simpleID = simplifyFmtID(matchFmtID);
-		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
-		ret += '<div id="fmt'+matchFmtID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:8px;">'+simpleID+'</div>';
+		let fontSize = 7 * heightAmp;
+		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+frame+'"></div>';
+		ret += '<div id="fmt'+matchFmtID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+noteColor+' font-size:'+fontSize+'px;">'+simpleID+'</div>';
 
 		// 臨時記号の描画
 		let accidental = sitchToAcc(matchSitch);
-		let accidentalLeftPos = matchOntime * (PX_PER_SEC * widthAmp) + X_OFFSET;
+		let accidentalLeftPos = matchOntime * amplifiedWidth + X_OFFSET;
 		let accidentalTopPosBase = -(1 + sitchHeight) * 5 + heightC4Match - 1;
 		ret += drawAccidentalMark(accidental, accidentalLeftPos, accidentalTopPosBase);
 	}
@@ -725,9 +728,10 @@ function drawMatchNote(){
 function drawScore(){
 	document.getElementById('display').style.width = (window.innerWidth - 50) + 'px';
 	document.getElementById('display').style.height = String(200 + yOffsetMatch) + 'px';
-	windowWidth = X_OFFSET + maxTime * (PX_PER_SEC * widthAmp);
+	windowWidth = X_OFFSET + maxTime * amplifiedWidth;
+	windowHeight = yOffsetMatch + 40 * heightUnit * heightAmp;
 	let str = "";
-	document.getElementById('display').innerHTML='<svg id="mysvg" xmlns="http://www.w3.org/2000/svg" width="'+(windowWidth+20)+'" height="500"></svg>';
+	document.getElementById('display').innerHTML='<svg id="mysvg" xmlns="http://www.w3.org/2000/svg" width='+(windowWidth+20)+' height='+windowHeight+'></svg>';
 
 	// 五線譜の描画
 	let lineStr = drawScoreBase(mysvg);
@@ -758,6 +762,14 @@ function drawScore(){
  * 倍率変更後などのオフセットの値をセットする
  */
 function setOffsetValue(){
+	amplifiedWidth = PX_PER_SEC * widthAmp;
+	heightUnit = 10 * heightAmp;
+	yOffsetFmt3x = 50 * heightAmp; // 五線譜の Y 座標上端（fmt3x） 
+	yOffsetMatch = 250 * heightAmp; // 五線譜の Y 座標上端（match）
+	heightPerLine = 3 * yOffsetFmt3x + 20 * heightUnit; // widthLast にあたる const
+	heightC4Fmt = yOffsetFmt3x + 5 * heightUnit; // C4 の位置(ト音記号の場合)
+	heightC4Match = yOffsetMatch + 5 * heightUnit; // C4 の位置(ト音記号の場合)
+	staffLineSpace = 2 * heightUnit; // 五線譜の上段と下段の間隔
 	return;
 }
 
@@ -769,6 +781,7 @@ $("#filein1").change(function(event){
 	let txtFile = event.target.files[0];
 	let fileName = txtFile.name;
 	widthAmp = 1.0;
+	heightAmp = 1.0;
 	readFmtFile(txtFile);
 	document.getElementById('filename1').value = fileName;
 });
@@ -781,6 +794,7 @@ $("#filein2").change(function(event){
 	let txtFile = event.target.files[0];
 	let fileName = txtFile.name;
 	widthAmp = 1.0;
+	heightAmp = 1.0;
 	readMatchFile(txtFile);
 	document.getElementById('filename2').value = fileName;
 });
@@ -792,6 +806,7 @@ $("#filein2").change(function(event){
 document.getElementById('shrinkButton').addEventListener('click', function(){
 	let diff = (widthAmp > 0.5) ? 0.1 : 0;
 	widthAmp -= diff;
+	setOffsetValue();
 	drawScore();
 	let pos = (document.getElementById('display').scrollLeft + 500 - X_OFFSET) / (1 + diff) + X_OFFSET - 500;
 	document.getElementById('display').scrollLeft = pos;
@@ -832,8 +847,9 @@ document.getElementById('minusButton').addEventListener('click', function(){
 document.getElementById('plusButton').addEventListener('click', function(){
 	let diff = (widthAmp < 3.0) ? 0.1 : 0;
 	widthAmp += diff;
-	let diff_height = (heightAmp > 0.5) ? 0.1 : 0;
+	let diff_height = (heightAmp < 3.0) ? 0.1 : 0;
 	heightAmp += diff_height;
+	setOffsetValue();
 	drawScore();
 	let pos = (1 + diff) * (document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
 	document.getElementById('display').scrollLeft = pos;
