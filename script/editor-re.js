@@ -22,8 +22,7 @@ let widthAmp = 1.0;
 let Y_OFFSET_FMT3X_LARGE = 2 * Y_OFFSET_FMT3X + 10 * HEIGHT_UNIT; // yoffset2 にあたる const
 let HEIGHT_PER_LINE = 3 * Y_OFFSET_FMT3X + 20 * HEIGHT_UNIT; // widthLast にあたる const
 let UNIT_STROKE_WIDTH = HEIGHT_UNIT / 20.0; // unitStrokeWidth にあたる const
-
-let amplification = 1.0;
+let amplification = 1.0; // 横幅倍率
 let maxTime = 2.1;
 let windowWidth = X_OFFSET + maxTime * (PX_PER_SEC * widthAmp);
 let fmtEventsArray = [];
@@ -157,8 +156,7 @@ function drawScoreBase(mysvg){
 		fmt3xUpperLine.setAttribute('x2', width);
 		fmt3xUpperLine.setAttribute('y1', Y_OFFSET_FMT3X + HEIGHT_UNIT * i);
 		fmt3xUpperLine.setAttribute('y2', Y_OFFSET_FMT3X + HEIGHT_UNIT * i);
-		fmt3xUpperLine.setAttribute('stroke-opacity', 1);
-		fmt3xUpperLine.setAttribute('stroke','rgb(0, 0, 0)'); // 五線譜の濃さ
+		fmt3xUpperLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)'); // 五線譜の濃さ
 		fmt3xUpperLine.setAttribute('stroke-width', 1); // 五線譜の太さ
 		mysvg.appendChild(fmt3xUpperLine);
 		// fmt3x 下段
@@ -167,8 +165,7 @@ function drawScoreBase(mysvg){
 		fmt3xLowerLine.setAttribute('x2', width);
 		fmt3xLowerLine.setAttribute('y1', Y_OFFSET_FMT3X + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
 		fmt3xLowerLine.setAttribute('y2', Y_OFFSET_FMT3X + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
-		fmt3xLowerLine.setAttribute('stroke-opacity', 1);
-		fmt3xLowerLine.setAttribute('stroke','rgb(0, 0, 0)'); // 五線譜の濃さ
+		fmt3xLowerLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)'); // 五線譜の濃さ
 		fmt3xLowerLine.setAttribute('stroke-width', 1); // 五線譜の太さ
 		mysvg.appendChild(fmt3xLowerLine);
 		// match 上段
@@ -177,8 +174,7 @@ function drawScoreBase(mysvg){
 		matchUpperLine.setAttribute('x2', width);
 		matchUpperLine.setAttribute('y1', Y_OFFSET_MATCH + HEIGHT_UNIT * i);
 		matchUpperLine.setAttribute('y2', Y_OFFSET_MATCH + HEIGHT_UNIT * i);
-		matchUpperLine.setAttribute('stroke-opacity', 1);
-		matchUpperLine.setAttribute('stroke','rgb(0, 0, 0)'); // 五線譜の濃さ
+		matchUpperLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)'); // 五線譜の濃さ
 		matchUpperLine.setAttribute('stroke-width', 1); // 五線譜の太さ
 		mysvg.appendChild(matchUpperLine);
 		// match 下段
@@ -187,8 +183,7 @@ function drawScoreBase(mysvg){
 		matchLowerLine.setAttribute('x2', width);
 		matchLowerLine.setAttribute('y1', Y_OFFSET_MATCH + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
 		matchLowerLine.setAttribute('y2', Y_OFFSET_MATCH + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
-		matchLowerLine.setAttribute('stroke-opacity', 1);
-		matchLowerLine.setAttribute('stroke','rgb(0, 0, 0)'); // 五線譜の濃さ
+		matchLowerLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)'); // 五線譜の濃さ
 		matchLowerLine.setAttribute('stroke-width', 1); // 五線譜の太さ
 		mysvg.appendChild(matchLowerLine);
 	}
@@ -198,9 +193,9 @@ function drawScoreBase(mysvg){
 		let lineTopFmt = Y_OFFSET_FMT3X - LEGER_WIDTH;
 		let lineTopMatch = Y_OFFSET_MATCH - LEGER_WIDTH;
 		let lineHeight = 12 * HEIGHT_UNIT;
-		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopFmt+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,1);"></div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopFmt+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,0.3);"></div>';
 		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopFmt - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,1); font-size:10pt">'+t+'</div>';
-		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopMatch+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,1);"></div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - LEGER_WIDTH)+'px; top:'+lineTopMatch+'px; width:0px; height:'+lineHeight+'px; border:'+LEGER_WIDTH+'px solid rgba(30,120,255,0.3);"></div>';
 		ret += '<div style="position:absolute; left:'+(lineLeft - 6)+'px; top:'+(lineTopMatch - 20)+'px; width:0px; height:0px; color:rgba(30,120,255,1); font-size:8pt">'+t+'</div>';
 	}
 	
@@ -458,66 +453,11 @@ function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmt
 	let frameDiff = isMissingNote ? 3 : 1;
 	let simpleID = simplifyFmtID(fmtID);
 	ret += '<div style="position:absolute; contentEditable=true; left:'+(onPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
-	ret += '<div id="fmt'+fmtID+'" contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+simpleID+'</div>';
+	ret += '<div id="fmt'+fmtID+'" contentEditable=true style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:8px;">'+simpleID+'</div>';
 	// 臨時記号
 	let accidentalLeftPos = onPos;
 	let accidentalTopPosBase = -(1 + ditchHeight) * 5 + HEIGHT_C4_FMT - 1;
 	ret += drawAccidentalMark(accidental, accidentalLeftPos, accidentalTopPosBase);
-	return ret;
-}
-
-
-/**
- * fmt3x の type "Chord" の場合の描画モジュール
- * @param {Fmt3x} drawedFmtEvt 
- */
-function setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime, tempo){
-	let ret = "";
-	let numNotes = drawedFmtEvt.numNotes;
-	let fmtSitchArray = drawedFmtEvt.sitches;
-	let fmtSTime = drawedFmtEvt.sTime;
-	let fmtSubOrder = drawedFmtEvt.subOrder;
-	let fmtDur = drawedFmtEvt.duration;
-	let fmtIDArray = drawedFmtEvt.fmtIDs;
-
-	for (let k = 0; k < numNotes; k++){
-		// ノート情報取得
-		let fmtSitch = fmtSitchArray[k];
-		let fmtID = fmtIDArray[k];
-
-		// initialize
-		let isOrnament = false;
-		let principleDitch = "";
-		let auxiliaryDitch = ""; // ???
-		let ornamentInd = ""; // ???
-
-		// ornament
-		if (fmtSitch.match(',')){
-			isOrnament = true;
-			principleDitch = fmtSitch.substring(0, fmtSitch.indexOf(','));
-		}
-		else {
-			principleDitch = fmtSitch;
-		}
-
-		// 音名から楽譜上での位置、臨時記号フラグ抽出
-		let ditchHeight = sitchToSitchHeight(principleDitch);
-		let acc = sitchToAcc(principleDitch);
-
-		// position の計算
-		let onPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
-					(minTRef + (fmtSTime - minSTime) * tempo + fmtSubOrder * GRACE_NOTE_DURATION);
-		let offPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
-					(minTRef + (fmtSTime + fmtDur - minSTime) * tempo);
-
-		// missing かどうかのチェック
-		let isMissingNote = missingIDSet.has(fmtID);
-		console.log(fmtID, isMissingNote);
-
-		// 描画
-		ret += setFmtNote(0, onPos, offPos, ditchHeight, acc, Y_OFFSET_FMT3X, fmtID, isMissingNote);
-	}
-
 	return ret;
 }
 
@@ -642,6 +582,12 @@ function drawFmtNote(){
 		for (let j = 0; j < drawedScores.length; j++){
 			let drawedFmtEvt = drawedScores[j];
 			let eventType = drawedFmtEvt.eventType;
+			let numNotes = drawedFmtEvt.numNotes;
+			let fmtSitchArray = drawedFmtEvt.sitches;
+			let fmtSTime = drawedFmtEvt.sTime;
+			let fmtSubOrder = drawedFmtEvt.subOrder;
+			let fmtDur = drawedFmtEvt.duration;
+			let fmtIDArray = drawedFmtEvt.fmtIDs;
 
 			// eventType ごとに処理
 			// rest : 休符
@@ -651,12 +597,61 @@ function drawFmtNote(){
 			}
 			// chord : 通常の音符の場合
 			else if (eventType.match(STR_CHORD)){
-				// ノートの描画に関する情報
-				ret += setFmtChord(drawedFmtEvt, minTRef, maxTRef, minRef, minSTime, maxSTime, tempo);
+				for (let k = 0; k < numNotes; k++){
+					// ノート情報取得
+					let fmtSitch = fmtSitchArray[k];
+					let fmtID = fmtIDArray[k];
+
+					// initialize
+					let isOrnament = false;
+					let principleDitch = "";
+					let auxiliaryDitch = ""; // ???
+					let ornamentInd = ""; // ???
+
+					// ornament
+					if (fmtSitch.match(',')){
+						isOrnament = true;
+						principleDitch = fmtSitch.substring(0, fmtSitch.indexOf(','));
+					}
+					else {
+						principleDitch = fmtSitch;
+					}
+
+					// 音名から楽譜上での位置、臨時記号フラグ抽出
+					let ditchHeight = sitchToSitchHeight(principleDitch);
+					let acc = sitchToAcc(principleDitch);
+					// position の計算
+					let onPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
+								(minTRef + (fmtSTime - minSTime) * tempo + fmtSubOrder * GRACE_NOTE_DURATION);
+					let offPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
+								(minTRef + (fmtSTime + fmtDur - minSTime) * tempo);
+					// missing かどうかのチェック
+					let isMissingNote = missingIDSet.has(fmtID);
+
+					// 描画
+					ret += setFmtNote(0, onPos, offPos, ditchHeight, acc, Y_OFFSET_FMT3X, fmtID, isMissingNote);
+				}
 			}
 			// short-apps or after-note
 			else if(eventType.match(STR_SHORT_APP) || eventType.match(STR_AFTERNOTE)){
-				// not implemented
+				for (let k = 0; k < numNotes; k++){
+					// ノート情報取得
+					let fmtID = fmtIDArray[k];
+					let principleDitch = fmtSitchArray[k];
+					// 音名から楽譜上での位置、臨時記号フラグ抽出
+					let ditchHeight = sitchToSitchHeight(principleDitch);
+					let acc = sitchToAcc(principleDitch);
+					// position の計算
+					let onPos = X_OFFSET + (PX_PER_SEC * widthAmp) *
+								(minTRef + (fmtSTime - minSTime) * tempo + fmtSubOrder * GRACE_NOTE_DURATION);
+					let offPos = onPos + (PX_PER_SEC * widthAmp) * GRACE_NOTE_DURATION;
+					// missing かどうかのチェック
+					let isMissingNote = missingIDSet.has(fmtID);
+					console.log(fmtID, isMissingNote);
+
+					// 描画
+					ret += setFmtNote(0, onPos, offPos, ditchHeight, acc, Y_OFFSET_FMT3X, fmtID, isMissingNote);
+				}
 			}
 		}
 	}
@@ -718,13 +713,11 @@ function drawMatchNote(){
 		let noteTopPos = -(1 + sitchHeight) * 5 + HEIGHT_C4_MATCH;
 		let noteWidth = (matchOfftime - matchOntime) * (PX_PER_SEC * widthAmp);
 		let noteColor = channelToColor(matchChannel);
-
-		// 色は暫定で固定
 		let frame = setFrameColor(matchErrorInd);
 		let frameDiff = (matchErrorInd > 0) ? 3 : 1;
 		let simpleID = simplifyFmtID(matchFmtID);
 		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+frame+'"></div>';
-		ret += '<div id="fmt'+matchFmtID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:10px;">'+simpleID+'</div>';
+		ret += '<div id="fmt'+matchFmtID+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(HEIGHT_UNIT-1)+'px; '+noteColor+' font-size:8px;">'+simpleID+'</div>';
 
 		// 臨時記号の描画
 		let accidental = sitchToAcc(matchSitch);
