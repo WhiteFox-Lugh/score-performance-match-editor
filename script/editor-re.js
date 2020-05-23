@@ -156,8 +156,8 @@ function drawScoreBase(mysvg){
 		fmt3xUpperLine.setAttribute('x2', width);
 		fmt3xUpperLine.setAttribute('y1', Y_OFFSET_FMT3X + HEIGHT_UNIT * i);
 		fmt3xUpperLine.setAttribute('y2', Y_OFFSET_FMT3X + HEIGHT_UNIT * i);
-		fmt3xUpperLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)'); // 五線譜の濃さ
-		fmt3xUpperLine.setAttribute('stroke-width', 1); // 五線譜の太さ
+		fmt3xUpperLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
+		fmt3xUpperLine.setAttribute('stroke-width', 1);
 		mysvg.appendChild(fmt3xUpperLine);
 		// fmt3x 下段
 		let fmt3xLowerLine = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -165,8 +165,8 @@ function drawScoreBase(mysvg){
 		fmt3xLowerLine.setAttribute('x2', width);
 		fmt3xLowerLine.setAttribute('y1', Y_OFFSET_FMT3X + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
 		fmt3xLowerLine.setAttribute('y2', Y_OFFSET_FMT3X + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
-		fmt3xLowerLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)'); // 五線譜の濃さ
-		fmt3xLowerLine.setAttribute('stroke-width', 1); // 五線譜の太さ
+		fmt3xLowerLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
+		fmt3xLowerLine.setAttribute('stroke-width', 1);
 		mysvg.appendChild(fmt3xLowerLine);
 		// match 上段
 		let matchUpperLine = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -174,8 +174,8 @@ function drawScoreBase(mysvg){
 		matchUpperLine.setAttribute('x2', width);
 		matchUpperLine.setAttribute('y1', Y_OFFSET_MATCH + HEIGHT_UNIT * i);
 		matchUpperLine.setAttribute('y2', Y_OFFSET_MATCH + HEIGHT_UNIT * i);
-		matchUpperLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)'); // 五線譜の濃さ
-		matchUpperLine.setAttribute('stroke-width', 1); // 五線譜の太さ
+		matchUpperLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
+		matchUpperLine.setAttribute('stroke-width', 1);
 		mysvg.appendChild(matchUpperLine);
 		// match 下段
 		let matchLowerLine = document.createElementNS('http://www.w3.org/2000/svg','line');
@@ -183,8 +183,8 @@ function drawScoreBase(mysvg){
 		matchLowerLine.setAttribute('x2', width);
 		matchLowerLine.setAttribute('y1', Y_OFFSET_MATCH + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
 		matchLowerLine.setAttribute('y2', Y_OFFSET_MATCH + STAFF_LINE_SPACE + HEIGHT_UNIT * (i + 5));
-		matchLowerLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)'); // 五線譜の濃さ
-		matchLowerLine.setAttribute('stroke-width', 1); // 五線譜の太さ
+		matchLowerLine.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
+		matchLowerLine.setAttribute('stroke-width', 1);
 		mysvg.appendChild(matchLowerLine);
 	}
 	// 小節線と小節番号の描画
@@ -256,7 +256,6 @@ function fmtGetSetmentIds(){
 
 		let matchEvt = matchEventsArray[i];
 		let skipInd = matchEvt.skipInd;
-		let errorInd = matchEvt.errorInd;
 
 		if (skipInd !== "-" && skipInd !== "+"){
 			ret.push(i);
@@ -299,7 +298,7 @@ function fmtGetErrorRegions(){
 
 
 /**
- * 装飾音符の Error region
+ * 装飾音符の Error region を得る
  * @param {*} drawedScores 
  * @param {*} minTRef 
  * @param {*} minSTime 
@@ -349,10 +348,9 @@ function fmtMissingNoteErrorRegions(minTRef, minSTime, maxSTime, tempo){
 }
 
 
-
 /**
  * error region の描画
- * @param {*} errorRegions 
+ * @param {Array<Region>} errorRegions : エラーリージョンの配列
  */
 function drawErrorRegions(errorRegions){
 	// 色は固定
@@ -373,7 +371,7 @@ function drawErrorRegions(errorRegions){
 
 
 /**
- * fmt の部分スコアを得る
+ * fmt の minSTime 以上 maxStime 以下のスコアを得る
  * @param {Number} minSTime 
  * @param {Number} maxSTime 
  */
@@ -418,7 +416,7 @@ function drawFmtLedgerLine(sitchHeight, leftPos){
 
 /**
  * 楽譜表示用に ID を短縮する
- * @param {*} str 
+ * @param {*} str : 元のID
  */
 function simplifyFmtID(str){
 	let ret = "";
@@ -434,7 +432,7 @@ function simplifyFmtID(str){
 
 
 /**
- * 楽譜上に fmt のノートをセットする
+ * 楽譜上に fmt のノートを描画する
  */
 function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmtID, isMissingNote){
 	let ret = "";
@@ -542,7 +540,6 @@ function drawFmtNote(){
 		let minSTime = fmtEventsArray[fmtEventSize - 1].sTime + 1;
 		let maxTRef = matchEventsArray[0].onTime;
 		let minTRef = matchEventsArray[matchEventSize - 1].onTime;
-		let minRef = -1;
 
 		for (let j = segmentIds[i]; j <= segmentIds[i + 1] && j < matchEventSize; j++){
 			let matchEvt = matchEventsArray[j];
@@ -556,19 +553,17 @@ function drawFmtNote(){
 			if (matchEvt.sTime < minSTime){
 				minSTime = matchEvt.sTime;
 				minTRef = matchEvt.onTime;
-				minRef = j;
 			}
 		}
 
 		// vref に対応
 		let tempo = (maxTRef - minTRef) / (maxSTime - minSTime);
-
 		if (maxSTime < matchEventsArray[matchEventSize - 1].sTime){
 			maxSTime--;
 			maxTRef -= tempo;
 		}
 
-		// segment の情報から fmt の部分スコアを得る
+		// segment の情報から fmt の minSTime 以上 maxStime 以下のスコアを得る
 		let drawedScores = getFmtSubScoreEvents(minSTime, maxSTime);
 
 		// 装飾音符の error region を追加
@@ -647,7 +642,6 @@ function drawFmtNote(){
 					let offPos = onPos + (PX_PER_SEC * widthAmp) * GRACE_NOTE_DURATION;
 					// missing かどうかのチェック
 					let isMissingNote = missingIDSet.has(fmtID);
-					console.log(fmtID, isMissingNote);
 
 					// 描画
 					ret += setFmtNote(0, onPos, offPos, ditchHeight, acc, Y_OFFSET_FMT3X, fmtID, isMissingNote);
@@ -675,10 +669,7 @@ function drawFmtNote(){
 function drawMatchNote(){
 	let ret = "";
 	for (let i=0; i<matchEventsArray.length; i++){
-		// 1つのイベントを読み込む
 		let matchEvent = matchEventsArray[i];
-
-		// 変数代入
 		let matchSitch = matchEvent.sitch;
 		let matchOntime = matchEvent.onTime;
 		let matchOfftime = matchEvent.offTime;
@@ -789,6 +780,9 @@ $("#filein2").change(function(event){
 });
 
 
+/**
+ * 横幅拡大ボタンが押されたときの処理
+ */
 document.getElementById('enlargeButton').addEventListener('click', function(){
 	let diff = (widthAmp > 0.5) ? 0.1 : 0;
 	widthAmp -= diff;
@@ -798,6 +792,9 @@ document.getElementById('enlargeButton').addEventListener('click', function(){
 });
 
 
+/**
+ * 横幅縮小ボタンが押されたときの処理
+ */
 document.getElementById('shrinkButton').addEventListener('click', function(){
 	let diff = (widthAmp < 3.0) ? 0.1 : 0;
 	widthAmp += diff;
@@ -811,7 +808,7 @@ document.getElementById('shrinkButton').addEventListener('click', function(){
  * ページ読み込み時の初期化を行う
  */
 function init(){
-	console.log("initialized");
+	console.log("Initialized");
 	// 読み込んだファイル名の初期化
 	document.getElementById('filename1').value = '';
 	document.getElementById('filename2').value = '';

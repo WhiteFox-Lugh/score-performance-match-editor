@@ -27,13 +27,6 @@ class Region {
         return;
     }
 
-    debug(){
-        console.log("Debug of regions");
-        for (let item of this.regions){
-            console.log(item);
-        }
-    }
-
     /**
      * 重なり合う region を除去する
      */
@@ -60,7 +53,6 @@ class Region {
         }
         newRegion.push([left, right]);
         this.regions = newRegion;
-        this.debug();
         return;
     }
 }

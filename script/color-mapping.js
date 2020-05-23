@@ -1,17 +1,17 @@
 /**
  * match line に色を付ける（音によって変える）
- * @param {*} i 
+ * @param {*} i : sitchHeight
  */
 function setMatchLineColor(i){
 	let n = (i % 7 < 0) ? ((i % 7) + 7) : (i % 7 + 0);
 	let ret = "";
-	if (n == 0){ret = "#CC00CC";}
-	else if(n == 1){ret = "#6600CC";}
-	else if(n == 2){ret = "#3366CC";}
-	else if(n == 3){ret = "#339900";}
-	else if(n == 4){ret = "#CC9900";}
-	else if(n == 5){ret = "#CC6600";}
-	else if(n == 6){ret = "#CC0000";}
+	if (n == 0){ret = "#FF0461";} // C or C# : red
+	else if(n == 1){ret = "#FF6928";} // D or D# : orange
+	else if(n == 2){ret = "#FFD700";} // E : yellow
+	else if(n == 3){ret = "#43FF6B";} // F or F# : green
+	else if(n == 4){ret = "#46EEFF";} // G or G# : lightblue
+	else if(n == 5){ret = "#2C7CFF";} // A or A# : blue
+	else if(n == 6){ret = "#7B3CFF";} // B : purple
 	else {ret = "#000000"}
 	return ret;
 }
