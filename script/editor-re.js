@@ -91,9 +91,6 @@ function readFmtFile(file){
 				fmtEventsArray.push(fmtEvt);
 			}
 		}
-//	console.log(fmtEventsArray);
-		// 五線譜への描画
-//		drawScore();
 	}
 	return;
 }
@@ -143,12 +140,11 @@ function readMatchFile(file){
 			maxTime = matchEventsArray[lastIdx].offtime + 3;
 		}
 		// 五線譜への描画
-// 		console.log(matchEventsArray);
-// 		console.log(maxTime);
 		drawScore();
 	}
 	return;
 }
+
 
 /**
  * fmtEventsArray の中のfmt1IDを探す
@@ -230,7 +226,7 @@ function drawScoreBase(mysvg){
 		line1.setAttribute('stroke','rgba(62,20,168,0.4)');
 		line1.setAttribute('stroke-width',1);
 		mysvg.appendChild(line1);
-		ret += '<div style="position:absolute; left:'+(lineLeft - 3)+'px; top:'+(lineTopFmt - 15)+'px; width:0px; height:0px; color:rgba(62,20,168,0.4); font-size:'+10+'px;">'+t+'</div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - 3)+'px; top:'+(lineTopFmt - 15)+'px; width:0px; height:0px; color:rgba(62,20,168,0.4); font-size:10px;">'+t+'</div>';
 		let line2=document.createElementNS('http://www.w3.org/2000/svg','line');
 		line2.setAttribute('x1',lineLeft);
 		line2.setAttribute('x2',lineLeft);
@@ -240,7 +236,7 @@ function drawScoreBase(mysvg){
 		line2.setAttribute('stroke','rgba(62,20,168,0.4)');
 		line2.setAttribute('stroke-width',1);
 		mysvg.appendChild(line2);
-		ret += '<div style="position:absolute; left:'+(lineLeft - 3)+'px; top:'+(lineTopMatch - 15)+'px; width:0px; height:0px; color:rgba(62,20,168,0.4); font-size:'+10+'px;">'+t+'</div>';
+		ret += '<div style="position:absolute; left:'+(lineLeft - 3)+'px; top:'+(lineTopMatch - 15)+'px; width:0px; height:0px; color:rgba(62,20,168,0.4); font-size:10px;">'+t+'</div>';
 	}//endfor t
 	
 	// ト音記号とヘ音記号の描画
@@ -255,8 +251,8 @@ function drawScoreBase(mysvg){
 	ret += '<img src="img/Gclef.png" height='+gclefHeight+' style="position:absolute; left:5px; top:'+gclefTopMatch+'px;"/>';
 	ret += '<img src="img/Fclef.png" height='+fclefHeight+' style="position:absolute; left:8px; top:'+fclefTopMatch+'px;"/>';
 
-	ret += '<div style="position:absolute; left:10px; top:'+(yOffsetFmt3x - 50*heightAmp)+'px; width:100px; height:0px; color:rgba(0,0,0,0.6); font-size:'+15*widthAmp+'px;">Score (fmt3x)</div>';
-	ret += '<div style="position:absolute; left:10px; top:'+(yOffsetMatch - 50*heightAmp)+'px; width:100px; height:0px; color:rgba(0,0,0,0.6); font-size:'+15*widthAmp+'px;">Performance (match)</div>';
+	ret += '<div style="position:absolute; left:10px; top:'+(yOffsetFmt3x - 50*heightAmp)+'px; width:100px; height:0px; color:rgba(0,0,0,0.6); font-size:'+15*heightAmp+'px;">Score (fmt3x)</div>';
+	ret += '<div style="position:absolute; left:10px; top:'+(yOffsetMatch - 50*heightAmp)+'px; width:100px; height:0px; color:rgba(0,0,0,0.6); font-size:'+15*heightAmp+'px;">Performance (match)</div>';
 
 	return ret;
 }
@@ -399,9 +395,6 @@ function drawErrorRegions(regions){
 	// 色は固定
 	const REGION_COLOR = "background-color:rgba(255,255,0,0.3);"
 	let ret = "";
-//	for (let item of regions){
-// 		let t1 = item[0];
-// 		let t2 = item[1];
 	for (let i=0;i<regions.length;i+=1){
 		let t1 = regions[i][0];
 		let t2 = regions[i][1];
