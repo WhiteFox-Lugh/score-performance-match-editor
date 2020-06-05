@@ -4,17 +4,19 @@
 class ScorePerfmMatchEvt{
 	constructor(){
 		this.ID = "";
-		this.onTime = 0.0;
-		this.offTime = 0.0;
+		this.ontime = 0.0;
+		this.offtime = 0.0;
 		this.sitch = "";
-		this.onVel = 0;
-		this.offVel = 0;
+		this.onvel = 0;
+		this.offvel = 0;
 		this.channel = 0;
 		this.matchStatus = 0;
-		this.sTime = 0;
-		this.fmtID = "";
+		this.stime = 0;
+		this.fmt1ID = "";
 		this.errorInd = 0;
 		this.skipInd = "";
+		this.rep = "";//Simplified fmt1ID
+		this.orgRep = "";//Simplified fmt1ID
 	}
 
 	/**
@@ -23,19 +25,22 @@ class ScorePerfmMatchEvt{
 	 */
 	fromFileEvt(event){
 		this.ID = String(event[0]);
-		this.onTime = Number(event[1]);
-		this.offTime = Number(event[2]);
+		this.ontime = Number(event[1]);
+		this.offtime = Number(event[2]);
 		this.sitch = String(event[3]);
-		this.onVel = Number(event[4]);
-		this.offVel = Number(event[5]);
+		this.onvel = Number(event[4]);
+		this.offvel = Number(event[5]);
 		this.channel = Number(event[6]);
 		this.matchStatus = Number(event[7]);
-		this.sTime = Number(event[8]);
-		this.fmtID = String(event[9]);
+		this.stime = Number(event[8]);
+		this.fmt1ID = String(event[9]);
 		this.errorInd = Number(event[10]);
 		this.skipInd = String(event[11]);
+		this.rep = "";//Simplified fmt1ID
+		this.orgRep = "";//Simplified fmt1ID
 		return;
-    }
+	}
+
 }
 
 
@@ -44,8 +49,8 @@ class ScorePerfmMatchEvt{
  */
 class MissingNote{
 	constructor(){
-		this.sTime = 0;
-		this.fmtID = "";
+		this.stime = 0;
+		this.fmt1ID = "";
 	}
 
 	/**
@@ -53,8 +58,8 @@ class MissingNote{
 	 * @param {Array} event 
 	 */
 	readFromFile(event){
-		this.sTime = Number(event[1]);
-		this.fmtID = String(event[2]);
+		this.stime = Number(event[1]);
+		this.fmt1ID = String(event[2]);
 		return;
 	}
 }

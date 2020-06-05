@@ -1,56 +1,74 @@
 <!DOCTYPE html>
-<html>
-    <head>
-        <meta charset="UTF-8">
-        <title>ScorePerformanceMatchEditor</title>
-        <link rel="stylesheet" type="text/css" href="./editor-ui.css">
-    </head>
-    <h3>Score Performance Match Editor</h3>
+	<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>ScorePerformanceMatchEditor</title>
+		<link rel="stylesheet" type="text/css" href="./editor-ui.css">
+	</head>
 
-    <!-- input fmt3x file -->
-    <div id="fileinput1" style="position:relative; width:1000px; height:50px;">
-		<!--<div id="dropzone1" effectallowed="move" style="font-size:12pt">Drop fmt3x file</div>-->
+	<h3>Score Performance Match Editor</h3>
+
+	<!-- input fmt3x file -->
+	<div id="fileinput1" style="position:relative; width:1000px; height:50px;">
+		<div id="dropzone" effectallowed="move" style="font-size:12pt">Drop fmt3x & match file</div>
 		<form>
-			<input type="file" id="filein1" name="filein1" size="40" style="position:absolute; left:50px; top:2px; opacity:0;" multiple="">
-			<label id="labelForFilein1" for="filein1" style="position:absolute; left:20px; top:7px; width:160px; height:15px; padding:10px;">Open fmt3x file</label>
+			<input type="file" id="filein1" name="filein1" size="40" style="position:absolute; left:350px; top:2px; opacity:0;" multiple/>
+			<label id="labelForFilein1" for="filein1" style="position:absolute; left:350px; top:7px; width:120px; height:15px; padding:10px;">Open fmt3x file</label>
 		</form>
-		<textarea id="filename1" style="position:absolute; left:230px; top:10px; width:300px; height:20px;"></textarea>
-    </div>
+		<div id="filename1" style="position:absolute; left:500px; top:15px; width:300px; height:20px; font-size:10pt;"></div>
+		<textarea id="correctInfo" onfocus="this.select();" style="position:absolute; left:800px; top:2px; width:350px; height:80px; font-size:8pt;"></textarea>
+	</div>
 
-    <!-- input match file -->
-    <div id="fileinput2" style="position:relative; width:1000px; height:50px;">
-		<!--<div id="dropzone2" effectallowed="move" style="font-size:12pt">Drop match file</div>-->
+	<!-- input match file -->
+	<div id="fileinput2" style="position:relative; width:800px; height:50px;">
 		<form>
 			<input type="file" id="filein2" name="filein1" size="40" style="position:absolute; left:350px; top:2px; opacity:0;" multiple="">
-			<label id="labelForFilein2" for="filein2" style="position:absolute; left:20px; top:7px; width:160px; height:15px; padding:10px;">Open match file</label>
+			<label id="labelForFilein2" for="filein2" style="position:absolute; left:350px; top:7px; width:120px; height:15px; padding:10px;">Open match file</label>
 		</form>
-		<textarea id="filename2" style="position:absolute; left:230px; top:10px; width:300px; height:20px;"></textarea>
-    </div>
-    <br>
+		<div id="filename2" style="position:absolute; left:500px; top:15px; width:300px; height:20px; font-size:10pt;"></div>
+	</div>
 
-    <!-- button -->
-    <form>
-      <input id="shrinkButton" type="button" value="-&gt; &lt-" style="background-color:rgba(220,220,220,1); width:80px; height:25px; font-size:12pt;">
-      <input id="enlargeButton" type="button" value="&lt;- -&gt;" style="background-color:rgba(220,220,220,1); width:80px; height:25px; font-size:12pt;">
-      <input id="minusButton" type="button" value="-" style="background-color:rgba(220,220,220,1); width:80px; height:25px; font-size:12pt;">
-      <input id="plusButton" type="button" value="+" style="background-color:rgba(220,220,220,1); width:80px; height:25px; font-size:12pt;">
-    </form>
+	<!-- button -->
+	<form>
+		<input id="shrinkButton" type="button" value="→←" style="background-color:rgba(220,220,220,1); width:40px; height:25px; font-size:11pt;"/>
+		<input id="enlargeButton" type="button" value="↔︎" style="background-color:rgba(220,220,220,1); width:40px; height:25px; font-size:11pt;"/>
+		<input id="minusButton" type="button" value="-" style="background-color:rgba(220,220,220,1); width:30px; height:25px; font-size:11pt;"/>
+		<input id="plusButton" type="button" value="+" style="background-color:rgba(220,220,220,1); width:30px; height:25px; font-size:11pt;"/>
+		　
+		<input id="drawButton" type="button" value="Draw" style="background-color:rgba(114,229,118,1); width:60px; height:25px; font-size:11pt;"/>
+		<input id="clearButton" type="button" value="Clear" style="background-color:rgba(255,200,30,1); width:60px; height:25px; font-size:11pt;"/>
+		<input id="downloadButton" type="button" value="Download" style="background-color:rgba(0,97,161,1); color:white; width:100px; height:25px; font-size:11pt;"/>
+		<input id="svgButton" type="button" value="SVG" style="background-color:rgba(0,97,161,1); color:white; width:50px; height:25px; font-size:11pt;"/>
+		<input id="showIDButton" type="button" value="Show ID" style="background-color:rgba(62,20,168,0.2); width:80px; height:25px; font-size:11pt;"/>
+		<input id="errOnOffButton" type="button" value="Error region" style="background-color:rgba(255,255,0,0.3); width:100px; height:25px; font-size:11pt;"/>
+		<input id="prevButton" type="button" value="Prev" style="background-color:rgba(220,220,220,1); width:60px; height:25px; font-size:11pt;"/>
+		<input id="nextButton" type="button" value="Next" style="background-color:rgba(220,220,220,1); width:60px; height:25px; font-size:11pt;"/>
+<!-- 		<input id="switchButton" type="button" value="Switch" style="background-color:rgba(220,220,220,1); width:60px; height:25px; font-size:11pt;"/> -->
+	</form>
+	<br>
+	<form>
+		Width <input id="widthInput" type="number"  value="100" min="10" max="400" step="10"> %
+		　
+		Height <input id="heightInput" type="number" value="100" min="10" max="400" step="10"> %
+		　
+		To <input id="moveToSec" type="text" value="0" style="width:40px;"/> (sec)
+		　
+		Label size <input id="fontSizeInput" type="number" value="7" min="1" max="20" step="1">
+		<label id="segStatus" style="width:120px; height:15px; padding:10px;">(0,30)</label>
+	</form>
 
-    <div id="widthAmp" style="font-size:15px;">Width : 100 %</div>
-    <div id="heightAmp" style="font-size:15px;">Height : 100 %</div>
+	<!-- display -->
+	<div id="display" style="position: relative; left: 10px; top: 10px; width: 1016px; height: 400px; overflow: scroll; border: 1px solid rgb(200, 200, 200);"></div>
 
-    <!-- display -->
-    <div id="display" style="position: relative; left: 10px; top: 10px; width: 1016px; height: 400px; overflow: scroll; border: 1px solid rgb(200, 200, 200);"></div>
-  
-    <div style="position:relative;height:20px;"></div>
+	<div style="position:relative;height:20px;"></div>
 
-    <!-- script load -->
-    <script src="./script/jquery_002.js"></script>
-    <script src="./script/editor-re.js"></script>
-    <script src="./script/fmt3x-re.js"></script>
-    <script src="./script/match-re.js"></script>
-    <script src="./script/pitch-calculation.js"></script>
-    <script src="./script/region.js"></script>
-    <script src="./script/color-mapping.js"></script>
-    
+	<!-- script load -->
+	<script src="./script/jquery.js"></script>
+	<script src="./script/editor-re.js"></script>
+	<script src="./script/fmt3x-re.js"></script>
+	<script src="./script/match-re.js"></script>
+	<script src="./script/pitch-calculation.js"></script>
+	<script src="./script/region.js"></script>
+	<script src="./script/color-mapping.js"></script>
+
 </html>

@@ -3,19 +3,19 @@
  */
 class Fmt3xEvent{
 	constructor(){
-		this.sTime = 0; // tick で表した発音時刻
-        this.barNum = ""; // string 小節番号
-        this.staff = 0; // 1: 上段, 2: 下段
-        this.voice = 0;
-        this.subVoice = 0;
-        this.subOrder = 0;
-        this.eventType = ""; // chord / rest / short-app / tremolo
-        this.duration = 0; // tick 単位での長さ
-        this.numNotes = 0; // 音符数
-        this.sitches = []; // 英語での音名
-        this.noteTypes = []; // N.. : 通常，Tr : トリル
-        this.fmtIDs = []; // 固有ID
-        this.arpFerInfo = [];
+		this.stime = 0; // tick で表した発音時刻
+		this.barNum = ""; // string 小節番号
+		this.staff = 0; // 1: 上段, 2: 下段
+		this.voice = 0;
+		this.subVoice = 0;
+		this.subOrder = 0;
+		this.eventType = ""; // chord / rest / short-app / tremolo
+		this.duration = 0; // tick 単位での長さ
+		this.numNotes = 0; // 音符数
+		this.sitches = []; // 英語での音名
+		this.noteTypes = []; // N.. : 通常，Tr : トリル
+		this.fmt1IDs = []; // 固有ID
+		this.arpFerInfo = [];
 	}
 
 	/**
@@ -26,7 +26,7 @@ class Fmt3xEvent{
 		const DATANUM = 9;
 
 		// 各要素の読み込み
-		let sTime = Number(event[0]);
+		let stime = Number(event[0]);
 		let barNum = String(event[1]);
 		let staff = Number(event[2]);
 		let voice = Number(event[3]);
@@ -39,7 +39,7 @@ class Fmt3xEvent{
 		// 配列の初期化
 		let sitchesDataArray = [];
 		let notetypesDataArray = [];
-		let fmtIDDataArray = [];
+		let fmt1IDDataArray = [];
 		let arpFerInfoArray = [];
 
 		// sitch の格納
@@ -58,18 +58,18 @@ class Fmt3xEvent{
 		}
 		let noteTypes = notetypesDataArray;
 
-		// fmtID の格納
+		// fmt1ID の格納
 		for (let j = 0; j < numNotes; j++){
 			let idx = j + DATANUM + 2 * numNotes;
-			let fmtIDData = String(event[idx]);
-			fmtIDDataArray.push(fmtIDData);
+			let fmt1IDData = String(event[idx]);
+			fmt1IDDataArray.push(fmt1IDData);
 		}
-		let fmtIDs = fmtIDDataArray;
+		let fmt1IDs = fmt1IDDataArray;
 
 		// セット
-		this.sTime = sTime;
-        this.barNum = barNum;
-        this.staff = staff;
+		this.stime = stime;
+		this.barNum = barNum;
+		this.staff = staff;
 		this.voice = voice;
 		this.subVoice = subVoice;
 		this.subOrder = subOrder;
@@ -78,8 +78,11 @@ class Fmt3xEvent{
 		this.numNotes = numNotes;
 		this.sitches = sitches;
 		this.noteTypes = noteTypes;
-		this.fmtIDs = fmtIDs;
+		this.fmt1IDs = fmt1IDs;
 		
 		return;
 	}
-}
+
+}//endclass Fmt3xEvent
+
+

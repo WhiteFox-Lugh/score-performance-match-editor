@@ -37,6 +37,25 @@ function channelToColor(channel){
 	else {return "background-color:rgba(120,120,120,0.4); color:white;";}
 }
 
+function accToColor(acc,onvel){
+	if (acc == 0){return "rgba(255,128,0,"+String(0.4*Math.pow(onvel/128.,0.5))+")";}
+	else if (acc == 1){return "rgba(0,0,0,"+String(0.4*Math.pow(onvel/128.,0.5))+")";}
+	else if (acc == 2){return "rgba(255,0,0,"+String(0.4*Math.pow(onvel/128.,0.5))+")";}
+	else if (acc == -1){return "rgba(0,120,0,"+String(0.4*Math.pow(onvel/128.,0.5))+")";}
+	else if (acc == -2){return "rgba(0,255,255,"+String(0.4*Math.pow(onvel/128.,0.5))+")";}
+	else {return "rgba(0,0,0,1)";}
+}
+
+function errToColor(i){
+	let ret = "";
+	if (i == -2){ret = "rgba(255,20,255,1)";}
+	else if (i == -1){ret = "rgba(200,100,50,1)";}
+	else if (i == 1){ret = "rgba(255,69,0,1)";}
+	else if (i == 2){ret = "rgba(0,255,0,1)";}
+	else if (i == 3){ret = "rgba(0,255,255,1)";}
+	else {ret = "rgba(20,20,20,1)";}
+	return ret;
+}//end errToColor
 
 /**
  * match の error indicator (errorInd)の値によって枠の色と太さを変更

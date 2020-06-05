@@ -18,6 +18,24 @@ body {
     color: white;
 }
 
+#dropzone {
+    position: absolute;
+    top: 5px;
+    height: 70px;
+    width: 320px;
+    padding: 5px;
+    background-color: rgba(20,20,20,0.1);
+    border: solid 3px rgba(20,20,20,0.3);
+    color: rgba(20,20,20,0.7);
+    text-align: center;
+    line-height: 70px;
+}
+
+#dropzone.dropover {
+    background-color: rgba(20,20,20,1);
+    color: white;
+}
+
 #dropzone1 {
     position: absolute;
     height: 20px;
