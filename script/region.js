@@ -32,11 +32,11 @@ class Region {
      */
     removeOverlappingRegion(){
         let newRegion = [];
-        let left = -10000;
-        let right = -10000;
+        let left = this.regions[0][0];
+        let right = this.regions[0][1];
         this.regions.sort(regionSortFunction);
 
-        for (let i=0; i<this.regions.length; i++){
+        for (let i = 1; i < this.regions.length; i++){
             let t1 = this.regions[i][0];
             let t2 = this.regions[i][1];
             if (t2 < right){

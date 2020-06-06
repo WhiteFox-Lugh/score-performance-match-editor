@@ -44,17 +44,19 @@ let showIDmode = 1;//0=hide, 1=show
 let errOnOff = 0;//0=on, 1=off
 let fontSize = 7;
 let curFocusID;
-let edits=[];
+let edits = [];
+
+let elDrop = document.getElementById('dropzone');
 
 /**
  * fmt ファイルの読み込み
  * @param {File} file 読み込む fmt3x ファイル
  */
 function readFmtFile(file){
-	const TPQN = "//TPQN:";
-	const VERSION = "//Fmt3xVersion:";
-	const DUPLICATE = "//DuplicateOnsets:";
-	const FMTVERSION = "170225";
+	const TPQN = '//TPQN:';
+	const VERSION = '//Fmt3xVersion:';
+	const DUPLICATE = '//DuplicateOnsets:';
+	const FMTVERSION = '170225';
 
 	let reader = new FileReader();
 	reader.readAsText(file);
@@ -105,7 +107,7 @@ function readFmtFile(file){
  * @param {File} file 読み込む match ファイル
  */
 function readMatchFile(file){
-	const MISSING = "Missing";
+	const MISSING = 'Missing';
 
 	let reader = new FileReader();
 	reader.readAsText(file);
@@ -119,7 +121,7 @@ function readMatchFile(file){
 		for (let i=0, len = fileContent.length; i<len; i++){
 			if(fileContent[i]==""){continue;}
 			// comment の読み込み
-			if (!fileContent[i].match(MISSING) && (fileContent[i][0] == "/" || fileContent[i][0] == "#")){
+			if (!fileContent[i].match(MISSING) && (fileContent[i][0] == '/' || fileContent[i][0] == '#')){
 				let commentData = fileContent[i];
 				matchCommentsArray.push(commentData);
 			}
@@ -186,10 +188,13 @@ function drawScoreBase(){
 	const LINE_START_X = 0;
 	let width = X_OFFSET + maxTime * amplifiedWidth;
 	let ret = "";
+
 	// 五線譜の描画部分
 	// fmt3x 五段
-	for(let i=-5;i<=5;i+=1){
-		if(i==0){continue;}
+	for (let i = -5; i <= 5; i++){
+		if (i == 0){
+			continue;
+		}
 		let line1=document.createElementNS('http://www.w3.org/2000/svg','line');
 		line1.setAttribute('x1',LINE_START_X);
 		line1.setAttribute('x2',width);
@@ -199,10 +204,13 @@ function drawScoreBase(){
 		line1.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
 		line1.setAttribute('stroke-width',1);
 		middleLayer.appendChild(line1);
-	}//endfor i
+	}
+
 	// match 五段
-	for(let i=-5;i<=5;i+=1){
-		if(i==0){continue;}
+	for (let i = -5; i <= 5; i++){
+		if (i == 0){
+			continue;
+		}
 		let line1=document.createElementNS('http://www.w3.org/2000/svg','line');
 		line1.setAttribute('x1',LINE_START_X);
 		line1.setAttribute('x2',width);
@@ -212,10 +220,10 @@ function drawScoreBase(){
 		line1.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
 		line1.setAttribute('stroke-width',1);
 		middleLayer.appendChild(line1);
-	}//endfor i
+	}
 
 	// 小節線と小節番号の描画
-	for(let t = 0; t < maxTime; t++){
+	for (let t = 0; t < maxTime; t++){
 		let lineLeft = t * amplifiedWidth + X_OFFSET;
 		let lineTopFmt = yOffsetFmt3x;
 		let lineTopMatch = yOffsetMatch;
@@ -240,7 +248,7 @@ function drawScoreBase(){
 		line2.setAttribute('stroke-width',1);
 		middleLayer.appendChild(line2);
 		ret += '<div style="position:absolute; left:'+(lineLeft - 3)+'px; top:'+(lineTopMatch - 15)+'px; width:0px; height:0px; color:rgba(62,20,168,0.4); font-size:10px;">'+t+'</div>';
-	}//endfor t
+	}
 	
 	// ト音記号とヘ音記号の描画
 	let gclefHeight = 7.5 * heightUnit;
@@ -253,7 +261,6 @@ function drawScoreBase(){
 	ret += '<img src="img/Fclef.png" height='+fclefHeight+' style="position:absolute; left:8px; top:'+fclefTopFmt+'px;"/>';
 	ret += '<img src="img/Gclef.png" height='+gclefHeight+' style="position:absolute; left:5px; top:'+gclefTopMatch+'px;"/>';
 	ret += '<img src="img/Fclef.png" height='+fclefHeight+' style="position:absolute; left:8px; top:'+fclefTopMatch+'px;"/>';
-
 	ret += '<div style="position:absolute; left:10px; top:'+(yOffsetFmt3x - 50*heightAmp)+'px; width:100px; height:0px; color:rgba(0,0,0,0.6); font-size:'+15*heightAmp+'px;">Score (fmt3x)</div>';
 	ret += '<div style="position:absolute; left:10px; top:'+(yOffsetMatch - 50*heightAmp)+'px; width:100px; height:0px; color:rgba(0,0,0,0.6); font-size:'+15*heightAmp+'px;">Performance (match)</div>';
 
@@ -378,7 +385,6 @@ function fmtMissingNoteErrorRegions(minTRef, minSTime, maxSTime, tempo){
 	for (let i = 0; i< missingNotesArray.length; i++){
 		let missingEvt = missingNotesArray[i];
 		let missingSTime = missingEvt.stime;
-		let missingID = missingEvt.ID;
 		if (minSTime <= missingSTime && missingSTime <= maxSTime){
 			let t = minTRef + (missingSTime - minSTime) * tempo;
 			let t1 = t - REGION_DIFF;
@@ -439,7 +445,7 @@ function getFmtSubScoreEvents(minSTime, maxSTime){
  * @param {*} sitchHeight 
  * @param {*} leftPos 
  */
-function drawFmtLedgerLine(sitchHeight,leftPos){
+function drawFmtLedgerLine(sitchHeight, leftPos){
 	let ret = "";
 	if (sitchHeight == 0){
 		let topPos = heightC4Fmt;
@@ -451,10 +457,9 @@ function drawFmtLedgerLine(sitchHeight,leftPos){
 		line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 		line.setAttribute('stroke-width', 1);
 		middleLayer.appendChild(line);
-// 		ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 	}
 	else if (sitchHeight > 11){
-		for (let h=12, end=sitchHeight;h<=end; h+=2){
+		for (let h = 12, end = sitchHeight; h <= end; h += 2){
 			let topPos = heightC4Fmt - 0.5 * heightUnit * h;
 			let line = document.createElementNS('http://www.w3.org/2000/svg','line');
 			line.setAttribute('x1', leftPos);
@@ -464,11 +469,10 @@ function drawFmtLedgerLine(sitchHeight,leftPos){
 			line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 			line.setAttribute('stroke-width', 1);
 			middleLayer.appendChild(line);
-// 			ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 		}
 	}
 	else if (sitchHeight < -11){
-		for (let h=-12, end=sitchHeight; h>=end; h-=2){
+		for (let h = -12, end = sitchHeight; h >= end; h -= 2){
 			let topPos = heightC4Fmt - 0.5 * heightUnit * h;
 			let line = document.createElementNS('http://www.w3.org/2000/svg','line');
 			line.setAttribute('x1', leftPos);
@@ -478,7 +482,6 @@ function drawFmtLedgerLine(sitchHeight,leftPos){
 			line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 			line.setAttribute('stroke-width', 1);
 			middleLayer.appendChild(line);
-// 			ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 		}
 	}
 	return ret;
@@ -500,6 +503,7 @@ function simplifyFmt1ID(str){
 	}
 	return ret;
 }
+
 
 /**
  * 楽譜表示用ID を元に戻す
@@ -528,16 +532,8 @@ function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmt
 	// map に座標を入れておく (fmt1ID -> (onPos_x, onPos_y))
 	let fmtPos = [onPos, noteTopPos + heightUnit];
 	idToFmtPos.set(fmt1ID, fmtPos);
-	// 色は暫定で固定
-	let frame = setFrameColor(isMissingNote ? -2 : 0);
-//	let noteColor = "background-color:rgba(255,80,180,0.4);"
 	let noteColor = accToColor(accidental,80);
-	let frameDiff = isMissingNote ? 3 : 1;
 	let simpleID = simplifyFmt1ID(fmt1ID);
-
-// 	ret += '<div style="position:absolute; contentEditable=true; left:'+(onPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+frame+'"></div>';
-// 	ret += '<div id="fmt'+fmt1ID+'" contentEditable=false style="position:absolute; left:'+onPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; background-color:'+noteColor+'; color:rgb(0,120,255); font-size:'+(fontSize*heightAmp)+'px; white-space: nowrap;">'+((showIDmode==1)? simpleID:"")+'</div>';
-
 	let rectFill = document.createElementNS('http://www.w3.org/2000/svg','rect');
 	rectFill.setAttribute('x', onPos);
 	rectFill.setAttribute('y', noteTopPos);
@@ -556,22 +552,16 @@ function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmt
 	rectFrame.setAttribute('stroke-width', (isMissingNote)? 3:1);
 	frontLayer.appendChild(rectFrame);
 
-//		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+frame+'"></div>';
-//		ret += '<div id="match-'+i+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; background-color:'+noteColor+'; font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+((showIDmode==1)? simpleID:"")+'</div>';
-
-
 	if(showIDmode==1){
 		ret += '<div id="fmt-'+fmt1ID+'" contentEditable=false style="position:absolute; left:'+(onPos+2)+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; color:rgb(0,120,255); font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+simpleID+'</div>';
-	}//endif
-
+	}
 
 	// 臨時記号
 	let accidentalLeftPos = onPos;
 	let accidentalTopPosBase = -(1 + ditchHeight) * 5*heightAmp + heightC4Fmt;
 	ret += drawAccidentalMark(accidental, accidentalLeftPos, accidentalTopPosBase);
 	return ret;
-
-}//end setFmtNote
+}
 
 
 /**
@@ -593,7 +583,6 @@ function drawMatchLine(){
 		let fmtYPos = scoreNotePos[1];
 		let matchXPos = X_OFFSET + amplifiedWidth * evtOnTime;
 		let matchYPos = -(3 + sitchHeight) * 5 * heightAmp + heightC4Match + heightUnit;
-//		let horizontalLen = Math.floor(0.4 * staffLineSpace);
 		let horizontalLen = 0;
 		let p1 = (fmtXPos + horizontalLen) + "," + fmtYPos;
 		let p2 = fmtXPos + "," + fmtYPos;
@@ -603,7 +592,6 @@ function drawMatchLine(){
 		let matchLine = document.createElementNS('http://www.w3.org/2000/svg','polyline');
 		matchLine.setAttribute('points', pStr);
 		matchLine.setAttribute('fill', 'none');
-//		matchLine.setAttribute('stroke', setMatchLineColor(sitchHeight));
 		matchLine.setAttribute('stroke', 'rgb(16,115,108)');
 		matchLine.setAttribute('stroke-width', LEGER_WIDTH);
 		matchLine.setAttribute('id', 'matchline-' + evtID);
@@ -617,16 +605,16 @@ function drawMatchLine(){
  * fmt3x の楽譜のノートを描画する一連の手順からなる関数
  */
 function drawFmtNote(){
-	const STR_CHORD = "chord";
-	const STR_REST = "rest";
-	const STR_SHORT_APP = "short-app";
-	const STR_TREMOLO = "tremolo";
-	const STR_AFTERNOTE = "after-note";
+	const STR_CHORD = 'chord';
+	const STR_REST = 'rest';
+	const STR_SHORT_APP = 'short-app';
+	const STR_TREMOLO = 'tremolo';
+	const STR_AFTERNOTE = 'after-note';
 
 	// ret に描くオブジェクトのタグの文字列をどんどん突っ込んでいく
-	let ret = "";
-	let backObjects = "";
-	let frontObjects ="";
+	let ret = '';
+	let backObjects = '';
+	let frontObjects = '';
 	let endTime = -1000;
 	let fmtEventSize = fmtEventsArray.length;
 	let matchEventSize = matchEventsArray.length;
@@ -721,13 +709,14 @@ function drawFmtNote(){
 					let auxiliaryDitch = ""; // ???
 					let ornamentInd = ""; // ???
 
-					// ornament
-					if (fmtSitch.match(',')){//if ornamented
+					// if ornamented
+					if (fmtSitch.match(',')){
 						isOrnament = true;
 						principleDitch = fmtSitch.substring(0, fmtSitch.indexOf(','));
 						ornamentInd=drawedScores[j].noteTypes[k].slice(0,drawedScores[j].noteTypes[k].indexOf('.'))+'('+fmtSitch+')';
 					}
-					else {//not ornamented
+					// not ornamented
+					else {
 						principleDitch = fmtSitch;
 					}
 
@@ -746,9 +735,8 @@ function drawFmtNote(){
 					frontObjects += setFmtNote(0, onPos, offPos, ditchHeight, acc, yOffsetFmt3x, fmt1ID, isMissingNote);
 					if(ornamentInd!=''){
 						frontObjects+='<div contentEditable=false style="position:absolute; left:'+(onPos)+'px; top:'+(yOffsetFmt3x + 5*heightUnit - 0.5*heightUnit*(ditchHeight+1)-2*heightUnit)+'px; width:10px; height:'+(heightUnit-1)+'px; color:rgb(0,0,0); font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+ornamentInd+'</div>';
-					}//endif
-
-				}//endfor k
+					}
+				}
 			}
 			// short-apps or after-note
 			else if(eventType.match(STR_SHORT_APP) || eventType.match(STR_AFTERNOTE)){
@@ -765,14 +753,12 @@ function drawFmtNote(){
 					let offPos = onPos + amplifiedWidth * GRACE_NOTE_DURATION;
 					// missing かどうかのチェック
 					let isMissingNote = missingIDSet.has(fmt1ID);
-
 					// 描画
 					frontObjects += setFmtNote(0, onPos, offPos, ditchHeight, acc, yOffsetFmt3x, fmt1ID, isMissingNote);
-
-				}//endfor k
-			}//endif
-		}//endfor j
-	}//endfor i
+				}
+			}
+		}
+	}
 
 	// matching line の描画
 	drawMatchLine();
@@ -780,14 +766,60 @@ function drawFmtNote(){
 	// error region 関連
 	let errorRegions = new Region(errorRegionsArray);
 	errorRegions.removeOverlappingRegion();
-
 	if(errOnOff==0){
 		backObjects += drawErrorRegions(errorRegions.regions);
-	}//endif
+	}
+	console.log(errorRegions);
 
 	ret = backObjects + frontObjects;
-
 	return ret;
+}
+
+
+/**
+ * match の加線の描画
+ * @param {*} sitchHeight 
+ * @param {*} leftPos 
+ */
+function drawMatchLedgerLine(sitchHeight, leftPos){
+	if (sitchHeight == 0){
+		let topPos = heightC4Match;
+		let line = document.createElementNS('http://www.w3.org/2000/svg','line');
+		line.setAttribute('x1', leftPos);
+		line.setAttribute('x2', leftPos + 16);
+		line.setAttribute('y1', topPos);
+		line.setAttribute('y2', topPos);
+		line.setAttribute('stroke','rgba(0, 0, 0, 1)');
+		line.setAttribute('stroke-width', 1);
+		middleLayer.appendChild(line);
+	}
+	else if (sitchHeight > 11){
+		for (let h=12, end=sitchHeight;h<=end; h+=2){
+			let topPos = heightC4Match - 0.5 * heightUnit * h;
+			let line = document.createElementNS('http://www.w3.org/2000/svg','line');
+			line.setAttribute('x1', leftPos);
+			line.setAttribute('x2', leftPos + 16);
+			line.setAttribute('y1', topPos);
+			line.setAttribute('y2', topPos);
+			line.setAttribute('stroke','rgba(0, 0, 0, 1)');
+			line.setAttribute('stroke-width', 1);
+			middleLayer.appendChild(line);
+		}
+	}
+	else if (sitchHeight < -11){
+		for (let h=-12, end=sitchHeight; h>=end; h-=2){
+			let topPos = heightC4Match - 0.5 * heightUnit * h;
+			let line = document.createElementNS('http://www.w3.org/2000/svg','line');
+			line.setAttribute('x1', leftPos);
+			line.setAttribute('x2', leftPos + 16);
+			line.setAttribute('y1', topPos);
+			line.setAttribute('y2', topPos);
+			line.setAttribute('stroke','rgba(0, 0, 0, 1)');
+			line.setAttribute('stroke-width', 1);
+			middleLayer.appendChild(line);
+		}
+	}
+	return;
 }
 
 
@@ -803,51 +835,12 @@ function drawMatchNote(){
 		let matchOfftime = matchEvent.offtime;
 		let matchOnvel = matchEvent.onvel;
 		let matchFmt1ID = matchEvent.fmt1ID;
-		let matchChannel = matchEvent.channel;
 		let matchErrorInd = matchEvent.errorInd;
-
-		// 音名から楽譜上での縦の位置を決定
 		let sitchHeight = sitchToSitchHeight(matchSitch);
-
-		// 臨時線の有無を判定し、必要なら描画
 		let leftPos = matchOntime * amplifiedWidth + X_OFFSET - 8;
-		if (sitchHeight == 0){
-			let topPos = heightC4Match;
-			let line = document.createElementNS('http://www.w3.org/2000/svg','line');
-			line.setAttribute('x1', leftPos);
-			line.setAttribute('x2', leftPos+16);
-			line.setAttribute('y1', topPos);
-			line.setAttribute('y2', topPos);
-			line.setAttribute('stroke','rgba(0, 0, 0, 1)');
-			line.setAttribute('stroke-width', 1);
-			middleLayer.appendChild(line);
-		}
-		else if (sitchHeight > 11){
-			for (let h=12, end=sitchHeight;h<=end; h+=2){
-				let topPos = heightC4Match - 0.5 * heightUnit * h;
-				let line = document.createElementNS('http://www.w3.org/2000/svg','line');
-				line.setAttribute('x1', leftPos);
-				line.setAttribute('x2', leftPos+16);
-				line.setAttribute('y1', topPos);
-				line.setAttribute('y2', topPos);
-				line.setAttribute('stroke','rgba(0, 0, 0, 1)');
-				line.setAttribute('stroke-width', 1);
-				middleLayer.appendChild(line);
-			}
-		}
-		else if (sitchHeight < -11){
-			for (let h=-12, end=sitchHeight; h>=end; h-=2){
-				let topPos = heightC4Match - 0.5 * heightUnit * h;
-				let line = document.createElementNS('http://www.w3.org/2000/svg','line');
-				line.setAttribute('x1', leftPos);
-				line.setAttribute('x2', leftPos+16);
-				line.setAttribute('y1', topPos);
-				line.setAttribute('y2', topPos);
-				line.setAttribute('stroke','rgba(0, 0, 0, 1)');
-				line.setAttribute('stroke-width', 1);
-				middleLayer.appendChild(line);
-			}
-		}
+		
+		// 加線描画
+		drawMatchLedgerLine(sitchHeight, leftPos);
 
 		// ノートの描画
 		let accidental = sitchToAcc(matchSitch);
@@ -855,8 +848,6 @@ function drawMatchNote(){
 		let noteTopPos = -(1 + sitchHeight) * 5 * heightAmp + heightC4Match;
 		let noteWidth = (matchOfftime - matchOntime) * amplifiedWidth;
 		let noteColor = accToColor(accidental,matchOnvel);
-		let frame = setFrameColor(matchErrorInd);
-		let frameDiff = (matchErrorInd > 0) ? 3 : 1;
 		let simpleID = simplifyFmt1ID(matchFmt1ID);
 		matchEvent.rep=simpleID;
 		matchEvent.orgRep=simpleID;
@@ -879,17 +870,16 @@ function drawMatchNote(){
 		rectFrame.setAttribute('stroke-width', (matchErrorInd>0)? 3:1);
 		frontLayer.appendChild(rectFrame);
 
-//		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+frame+'"></div>';
-//		ret += '<div id="match-'+i+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; background-color:'+noteColor+'; font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+((showIDmode==1)? simpleID:"")+'</div>';
 		if(showIDmode==1){
-			ret += '<div id="match-'+i+'" contentEditable=true style="position:absolute; left:'+(noteLeftPos+2)+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; color:'+((simpleID=="*")? 'rgb(255,30,120)':'rgb(0,120,255)')+'; font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+simpleID+'</div>';
-		}//endif
+			let fontColor = simpleID === '*' ? 'rgb(255,30,120)' : 'rgb(0,120,255)';
+			ret += '<div id="match-'+i+'" contentEditable=true style="position:absolute; left:'+(noteLeftPos+2)+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; color:'+fontColor+'; font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+simpleID+'</div>';
+		}
 
 		// 臨時記号の描画
 		let accidentalLeftPos = matchOntime * amplifiedWidth + X_OFFSET;
 		let accidentalTopPosBase = -(1 + sitchHeight) * 5 * heightAmp + heightC4Match;
 		ret += drawAccidentalMark(accidental, accidentalLeftPos, accidentalTopPosBase);
-	}//endfor i
+	}
 
 	return ret;
 }
@@ -995,6 +985,7 @@ function drawScore(){
 	return;
 }
 
+
 function SetFocusline(matchNoteID){
 	let noteLeftPos = matchEventsArray[matchNoteID].ontime * amplifiedWidth + X_OFFSET;
 	let noteTopPos = -(1 + sitchToSitchHeight(matchEventsArray[matchNoteID].sitch)) * 5 * heightAmp + heightC4Match;
@@ -1070,6 +1061,7 @@ $("#filein1").change(function(event){
 	document.getElementById('filename1').value = fileName;
 });
 
+
 /**
  * match ファイルの読み込みボックスからの処理
  */
@@ -1084,7 +1076,6 @@ $("#filein2").change(function(event){
 	document.getElementById('filename2').value = fileName;
 });
 
-var elDrop = document.getElementById('dropzone');
 
 elDrop.addEventListener('dragover', function(event) {
 	event.preventDefault();
@@ -1092,9 +1083,11 @@ elDrop.addEventListener('dragover', function(event) {
 	elDrop.classList.add('dropover');
 });
 
+
 elDrop.addEventListener('dragleave', function(event) {
 	elDrop.classList.remove('dropover');
 });
+
 
 elDrop.addEventListener('drop', function(event) {
 	event.preventDefault();
@@ -1185,19 +1178,6 @@ document.getElementById('plusButton').addEventListener('click', function(){
 });
 
 
-/**
- * ページ読み込み時の初期化を行う
- */
-function init(){
-	console.log("Initialized");
-	// 読み込んだファイル名の初期化
-	$("#filename1").text('');
-	$("#filename2").text('');
-	// スコア描画
-	drawScore();
-	return;
-}
-
 function clearScore(){
 	fmtEventsArray = [];
 	matchEventsArray = [];
@@ -1213,9 +1193,12 @@ function clearScore(){
 	document.getElementById('segStatus').innerHTML='('+segmentOffset+','+segmentSize+')';
 	init();
 }
+
+
 document.getElementById('clearButton').addEventListener('click', function(){
 	clearScore();
 });
+
 
 document.getElementById('drawButton').addEventListener('click', function(event){
 // let segmentOffset = 0;
@@ -1255,9 +1238,11 @@ document.getElementById('drawButton').addEventListener('click', function(event){
 	document.getElementById('display').scrollLeft = pos;
 });
 
+
 document.getElementById('display').onscroll = function() {
 	document.getElementById('moveToSec').value=(this.scrollLeft + 500 - X_OFFSET)/amplifiedWidth;
 }
+
 
 document.getElementById('showIDButton').addEventListener('click', function(event){
 	if(document.getElementById('showIDButton').value=='Show ID'){
@@ -1270,6 +1255,7 @@ document.getElementById('showIDButton').addEventListener('click', function(event
 		document.getElementById('showIDButton').value='Show ID';
 	}//endif
 });
+
 
 document.getElementById('errOnOffButton').addEventListener('click', function(event){
 	if(errOnOff==0){
@@ -1294,6 +1280,7 @@ function UpdateEditInfo(){
 	}//endfor i
 	document.getElementById('correctInfo').value=str;
 }//end UpdateEditInfo
+
 
 function UpdateMatchData(){
 	let replacedFmt1IDs=[];//To be candidates of missing notes
@@ -1393,6 +1380,7 @@ function UpdateMatchData(){
 
 }//end UpdateMatchData
 
+
 document.getElementById('downloadButton').addEventListener('click', function(event){
 	UpdateMatchData();
 	let str='';
@@ -1432,6 +1420,19 @@ document.getElementById('svgButton').addEventListener('click', function(event){
 	a.click();
 	document.body.removeChild(a);
 });
+
+
+/**
+ * ページ読み込み時の初期化を行う
+ */
+function init(){
+	// 読み込んだファイル名の初期化
+	$("#filename1").text('');
+	$("#filename2").text('');
+	// スコア描画
+	drawScore();
+	return;
+}
 
 
 /**
