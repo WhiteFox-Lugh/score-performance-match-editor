@@ -15,6 +15,10 @@ const MIN_HEIGHT_AMP = 0.10;
 let segmentOffset = 0;
 let segmentSize = 30;
 
+let backLayerObjects = [];
+let middleLayerObjects = [];
+let frontLayerObjects = [];
+
 let widthAmp = 1.0; // 横の拡大倍率
 let heightAmp = 1.0; // 縦の拡大倍率
 let heightUnit = 10; // 五線譜の間隔
@@ -178,11 +182,10 @@ function FindFmt3xScorePos(Id_fmt1){
  * 五線譜を描く
  * @param {*} mysvg HTML 内の mysvg
  */
-function drawScoreBase(mysvg){
+function drawScoreBase(){
 	const LINE_START_X = 0;
 	let width = X_OFFSET + maxTime * amplifiedWidth;
 	let ret = "";
-
 	// 五線譜の描画部分
 	// fmt3x 五段
 	for(let i=-5;i<=5;i+=1){
@@ -195,7 +198,7 @@ function drawScoreBase(mysvg){
 		line1.setAttribute('stroke-opacity',1);
 		line1.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
 		line1.setAttribute('stroke-width',1);
-		mysvg.appendChild(line1);
+		middleLayer.appendChild(line1);
 	}//endfor i
 	// match 五段
 	for(let i=-5;i<=5;i+=1){
@@ -208,7 +211,7 @@ function drawScoreBase(mysvg){
 		line1.setAttribute('stroke-opacity',1);
 		line1.setAttribute('stroke','rgba(0, 0, 0, 0.5)');
 		line1.setAttribute('stroke-width',1);
-		mysvg.appendChild(line1);
+		middleLayer.appendChild(line1);
 	}//endfor i
 
 	// 小節線と小節番号の描画
@@ -225,7 +228,7 @@ function drawScoreBase(mysvg){
 		line1.setAttribute('stroke-opacity',1);
 		line1.setAttribute('stroke','rgba(62,20,168,0.4)');
 		line1.setAttribute('stroke-width',1);
-		mysvg.appendChild(line1);
+		middleLayer.appendChild(line1);
 		ret += '<div style="position:absolute; left:'+(lineLeft - 3)+'px; top:'+(lineTopFmt - 15)+'px; width:0px; height:0px; color:rgba(62,20,168,0.4); font-size:10px;">'+t+'</div>';
 		let line2=document.createElementNS('http://www.w3.org/2000/svg','line');
 		line2.setAttribute('x1',lineLeft);
@@ -235,7 +238,7 @@ function drawScoreBase(mysvg){
 		line2.setAttribute('stroke-opacity',1);
 		line2.setAttribute('stroke','rgba(62,20,168,0.4)');
 		line2.setAttribute('stroke-width',1);
-		mysvg.appendChild(line2);
+		middleLayer.appendChild(line2);
 		ret += '<div style="position:absolute; left:'+(lineLeft - 3)+'px; top:'+(lineTopMatch - 15)+'px; width:0px; height:0px; color:rgba(62,20,168,0.4); font-size:10px;">'+t+'</div>';
 	}//endfor t
 	
@@ -392,9 +395,6 @@ function fmtMissingNoteErrorRegions(minTRef, minSTime, maxSTime, tempo){
  * @param {Array<Region>} regions : エラーリージョンの配列
  */
 function drawErrorRegions(regions){
-	// 色は固定
-	const REGION_COLOR = "background-color:rgba(255,255,0,0.3);"
-	let ret = "";
 	for (let i=0;i<regions.length;i+=1){
 		let t1 = regions[i][0];
 		let t2 = regions[i][1];
@@ -404,9 +404,16 @@ function drawErrorRegions(regions){
 		let topPos = yOffsetFmt3x - 5 * staffLineSpace;
 		let rectHeight = 25 * staffLineSpace;
 		let rectWidth = rightPos - leftPos;
-		ret += '<div style="position:absolute; left:'+leftPos.toFixed(3)+'px; top:'+topPos.toFixed(3)+'px; width:'+rectWidth.toFixed(3)+'px; height:'+rectHeight.toFixed(3)+'px; '+REGION_COLOR+'"></div>';
+		let rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+		rect.setAttribute('x', leftPos);
+		rect.setAttribute('y', topPos);
+		rect.setAttribute('width', rectWidth);
+		rect.setAttribute('height', rectHeight);
+		rect.setAttribute('fill','yellow');
+		rect.setAttribute('fill-opacity','0.3');
+		backLayer.appendChild(rect);
 	}
-	return ret;
+	return;
 }
 
 
@@ -443,7 +450,7 @@ function drawFmtLedgerLine(sitchHeight,leftPos){
 		line.setAttribute('y2', topPos);
 		line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 		line.setAttribute('stroke-width', 1);
-		mysvg.appendChild(line);
+		middleLayer.appendChild(line);
 // 		ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 	}
 	else if (sitchHeight > 11){
@@ -456,7 +463,7 @@ function drawFmtLedgerLine(sitchHeight,leftPos){
 			line.setAttribute('y2', topPos);
 			line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 			line.setAttribute('stroke-width', 1);
-			mysvg.appendChild(line);
+			middleLayer.appendChild(line);
 // 			ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 		}
 	}
@@ -470,7 +477,7 @@ function drawFmtLedgerLine(sitchHeight,leftPos){
 			line.setAttribute('y2', topPos);
 			line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 			line.setAttribute('stroke-width', 1);
-			mysvg.appendChild(line);
+			middleLayer.appendChild(line);
 // 			ret += '<div style="position:absolute; left:'+leftPos+'px; top:'+topPos+'px; width:16px; height:0px; border:'+LEGER_WIDTH+'px solid rgba(0,0,0,1);"></div>';
 		}
 	}
@@ -538,7 +545,7 @@ function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmt
 	rectFill.setAttribute('height',heightUnit);
 	rectFill.setAttribute('fill', noteColor);
 	rectFill.setAttribute('stroke','none');
-	mysvg.appendChild(rectFill);
+	frontLayer.appendChild(rectFill);
 	let rectFrame = document.createElementNS('http://www.w3.org/2000/svg','rect');
 	rectFrame.setAttribute('x', onPos);
 	rectFrame.setAttribute('y', noteTopPos);
@@ -547,7 +554,7 @@ function setFmtNote(onLine, onPos, offPos, ditchHeight, accidental, yOffset, fmt
 	rectFrame.setAttribute('fill', 'none');
 	rectFrame.setAttribute('stroke',errToColor(isMissingNote ? -2 : 0));
 	rectFrame.setAttribute('stroke-width', (isMissingNote)? 3:1);
-	mysvg.appendChild(rectFrame);
+	frontLayer.appendChild(rectFrame);
 
 //		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+frame+'"></div>';
 //		ret += '<div id="match-'+i+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; background-color:'+noteColor+'; font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+((showIDmode==1)? simpleID:"")+'</div>';
@@ -600,7 +607,7 @@ function drawMatchLine(){
 		matchLine.setAttribute('stroke', 'rgb(16,115,108)');
 		matchLine.setAttribute('stroke-width', LEGER_WIDTH);
 		matchLine.setAttribute('id', 'matchline-' + evtID);
-		mysvg.appendChild(matchLine);
+		frontLayer.appendChild(matchLine);
 	}
 	return;
 }
@@ -618,7 +625,8 @@ function drawFmtNote(){
 
 	// ret に描くオブジェクトのタグの文字列をどんどん突っ込んでいく
 	let ret = "";
-	let ret0="";
+	let backObjects = "";
+	let frontObjects ="";
 	let endTime = -1000;
 	let fmtEventSize = fmtEventsArray.length;
 	let matchEventSize = matchEventsArray.length;
@@ -735,9 +743,9 @@ function drawFmtNote(){
 					let isMissingNote = missingIDSet.has(fmt1ID);
 
 					// 描画
-					ret0 += setFmtNote(0, onPos, offPos, ditchHeight, acc, yOffsetFmt3x, fmt1ID, isMissingNote);
+					frontObjects += setFmtNote(0, onPos, offPos, ditchHeight, acc, yOffsetFmt3x, fmt1ID, isMissingNote);
 					if(ornamentInd!=''){
-						ret0+='<div contentEditable=false style="position:absolute; left:'+(onPos)+'px; top:'+(yOffsetFmt3x + 5*heightUnit - 0.5*heightUnit*(ditchHeight+1)-2*heightUnit)+'px; width:10px; height:'+(heightUnit-1)+'px; color:rgb(0,0,0); font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+ornamentInd+'</div>';
+						frontObjects+='<div contentEditable=false style="position:absolute; left:'+(onPos)+'px; top:'+(yOffsetFmt3x + 5*heightUnit - 0.5*heightUnit*(ditchHeight+1)-2*heightUnit)+'px; width:10px; height:'+(heightUnit-1)+'px; color:rgb(0,0,0); font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+ornamentInd+'</div>';
 					}//endif
 
 				}//endfor k
@@ -759,7 +767,7 @@ function drawFmtNote(){
 					let isMissingNote = missingIDSet.has(fmt1ID);
 
 					// 描画
-					ret0 += setFmtNote(0, onPos, offPos, ditchHeight, acc, yOffsetFmt3x, fmt1ID, isMissingNote);
+					frontObjects += setFmtNote(0, onPos, offPos, ditchHeight, acc, yOffsetFmt3x, fmt1ID, isMissingNote);
 
 				}//endfor k
 			}//endif
@@ -774,10 +782,12 @@ function drawFmtNote(){
 	errorRegions.removeOverlappingRegion();
 
 	if(errOnOff==0){
-		ret += drawErrorRegions(errorRegions.regions);
+		backObjects += drawErrorRegions(errorRegions.regions);
 	}//endif
 
-	return ret+ret0;
+	ret = backObjects + frontObjects;
+
+	return ret;
 }
 
 
@@ -810,7 +820,7 @@ function drawMatchNote(){
 			line.setAttribute('y2', topPos);
 			line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 			line.setAttribute('stroke-width', 1);
-			mysvg.appendChild(line);
+			middleLayer.appendChild(line);
 		}
 		else if (sitchHeight > 11){
 			for (let h=12, end=sitchHeight;h<=end; h+=2){
@@ -822,7 +832,7 @@ function drawMatchNote(){
 				line.setAttribute('y2', topPos);
 				line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 				line.setAttribute('stroke-width', 1);
-				mysvg.appendChild(line);
+				middleLayer.appendChild(line);
 			}
 		}
 		else if (sitchHeight < -11){
@@ -835,7 +845,7 @@ function drawMatchNote(){
 				line.setAttribute('y2', topPos);
 				line.setAttribute('stroke','rgba(0, 0, 0, 1)');
 				line.setAttribute('stroke-width', 1);
-				mysvg.appendChild(line);
+				middleLayer.appendChild(line);
 			}
 		}
 
@@ -858,7 +868,7 @@ function drawMatchNote(){
 		rectFill.setAttribute('height',heightUnit);
 		rectFill.setAttribute('fill', noteColor);
 		rectFill.setAttribute('stroke','none');
-		mysvg.appendChild(rectFill);
+		frontLayer.appendChild(rectFill);
 		let rectFrame = document.createElementNS('http://www.w3.org/2000/svg','rect');
 		rectFrame.setAttribute('x', noteLeftPos);
 		rectFrame.setAttribute('y', noteTopPos);
@@ -867,7 +877,7 @@ function drawMatchNote(){
 		rectFrame.setAttribute('fill', 'none');
 		rectFrame.setAttribute('stroke',errToColor(matchErrorInd));
 		rectFrame.setAttribute('stroke-width', (matchErrorInd>0)? 3:1);
-		mysvg.appendChild(rectFrame);
+		frontLayer.appendChild(rectFrame);
 
 //		ret += '<div style="position:absolute; contentEditable=true; left:'+(noteLeftPos - frameDiff)+'px; top:'+(noteTopPos - frameDiff)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; '+frame+'"></div>';
 //		ret += '<div id="match-'+i+'" contentEditable=true style="position:absolute; left:'+noteLeftPos+'px; top:'+(noteTopPos)+'px; width:'+noteWidth+'px; height:'+(heightUnit-1)+'px; background-color:'+noteColor+'; font-size:'+(fontSize*heightAmp)+'pt; white-space: nowrap;">'+((showIDmode==1)? simpleID:"")+'</div>';
@@ -893,12 +903,15 @@ function drawScore(){
 	document.getElementById('display').style.height = String(200 + yOffsetMatch) + 'px';
 	windowWidth = X_OFFSET + maxTime * amplifiedWidth;
 	windowHeight = yOffsetMatch + 19 * heightUnit;
+	backLayerObjects = [];
+	middleLayerObjects = [];
+	frontLayerObjects = [];
 
-	document.getElementById('display').innerHTML='<svg id="mysvg" xmlns="http://www.w3.org/2000/svg" width='+(windowWidth+20)+' height='+windowHeight+'></svg>';
+	document.getElementById('display').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width='+(windowWidth+20)+' height='+windowHeight+'><g id="backLayer"></g><g id="middleLayer"></g><g id="frontLayer"></g></svg>';
 	let str = "";
 
-	// 五線譜の描画
-	let lineStr = drawScoreBase(mysvg);
+	// 五線譜
+	let lineStr = drawScoreBase();
 	str += lineStr;
 
 	// マップの初期化
@@ -916,6 +929,7 @@ function drawScore(){
 		str += matchStr;
 	}
 
+	// div 要素の描画
 	document.getElementById('display').innerHTML+= str;
 
 	$(function(){
@@ -1001,7 +1015,7 @@ function SetFocusline(matchNoteID){
 	line.setAttribute('stroke','rgba(0, 120, 255, 1)');
 	line.setAttribute('stroke-width', 10);
 	line.setAttribute('id','focusline');
-	mysvg.appendChild(line);
+	frontLayer.appendChild(line);
 	let line2 = document.createElementNS('http://www.w3.org/2000/svg','line');
 	line2.setAttribute('x1', noteLeftPos);
 	line2.setAttribute('x2', fmtXPos);
@@ -1010,7 +1024,7 @@ function SetFocusline(matchNoteID){
 	line2.setAttribute('stroke','rgba(0, 0, 0, 1)');
 	line2.setAttribute('stroke-width', 2);
 	line2.setAttribute('id','focusline2');
-	mysvg.appendChild(line2);
+	frontLayer.appendChild(line2);
 }//
 
 
