@@ -1,6 +1,7 @@
 const LEGER_WIDTH = 1;
 const PX_PER_SEC = 200;
 const X_OFFSET = 100; // X 座標左端
+const X_POS_CORRECTION = X_OFFSET - 500; // 移動時の X 座標補正
 const TAB = String.fromCharCode(9);
 const SPACE = String.fromCharCode(32);
 const SEC_PER_LINE = 9999;
@@ -38,6 +39,7 @@ let fmtTPQN = 4;
 let matchEventsArray = [];
 let matchCommentsArray = [];
 let missingNotesArray = [];
+let errorRegionsArray = [];
 let idToFmtPos = new Map();
 let missingIDSet = new Set();
 let showIDmode = 1;//0=hide, 1=show
@@ -45,6 +47,7 @@ let errOnOff = 0;//0=on, 1=off
 let fontSize = 7;
 let curFocusID;
 let edits = [];
+let regionIndex = 0;
 
 let elDrop = document.getElementById('dropzone');
 
@@ -636,7 +639,7 @@ function drawFmtNote(){
 	let segmentIds = fmtGetSegmentIds();
 
 	// errorRegion の取得 (overlap あり)
-	let errorRegionsArray = fmtGetErrorRegions();
+	let errorRegionsArrayTmp = fmtGetErrorRegions();
 
 	// fmt セグメントごとの縮小率の計算
 	// idToFmtPos は match の ID -> fmt ノートの座標をマッピングする
@@ -674,11 +677,11 @@ function drawFmtNote(){
 
 		// 装飾音符の error region を追加
 		let ornamentErrorRegions = getFmtOrnamentedErrorRegions(drawedScores, minTRef, minSTime, tempo);
-		errorRegionsArray = errorRegionsArray.concat(ornamentErrorRegions);
+		errorRegionsArrayTmp = errorRegionsArrayTmp.concat(ornamentErrorRegions);
 
 		// missing note の error region を追加
 		let missingNoteErrorRegions = fmtMissingNoteErrorRegions(minTRef, minSTime, maxSTime, tempo);
-		errorRegionsArray = errorRegionsArray.concat(missingNoteErrorRegions);
+		errorRegionsArrayTmp = errorRegionsArrayTmp.concat(missingNoteErrorRegions);
 
 		for (let j = 0; j < drawedScores.length; j++){
 			let drawedFmtEvt = drawedScores[j];
@@ -764,12 +767,12 @@ function drawFmtNote(){
 	drawMatchLine();
 
 	// error region 関連
-	let errorRegions = new Region(errorRegionsArray);
+	let errorRegions = new Region(errorRegionsArrayTmp);
 	errorRegions.removeOverlappingRegion();
 	if(errOnOff==0){
 		backObjects += drawErrorRegions(errorRegions.regions);
 	}
-	console.log(errorRegions);
+	errorRegionsArray = errorRegions.regions;
 
 	ret = backObjects + frontObjects;
 	return ret;
@@ -896,8 +899,9 @@ function drawScore(){
 	backLayerObjects = [];
 	middleLayerObjects = [];
 	frontLayerObjects = [];
+	errorRegionsArray = [];
 
-	document.getElementById('display').innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width='+(windowWidth+20)+' height='+windowHeight+'><g id="backLayer"></g><g id="middleLayer"></g><g id="frontLayer"></g></svg>';
+	document.getElementById('display').innerHTML = '<svg id="scoreDisplay" xmlns="http://www.w3.org/2000/svg" width='+(windowWidth+window.innerWidth)+' height='+windowHeight+'><g id="backLayer"></g><g id="middleLayer"></g><g id="frontLayer"></g></svg>';
 	let str = "";
 
 	// 五線譜
@@ -1127,7 +1131,7 @@ document.getElementById('shrinkButton').addEventListener('click', function(){
 	showAmp();
 	setOffsetValue();
 	drawScore();
-	let pos = (widthAmp/(widthAmp+diff))*(document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
+	let pos = (widthAmp/(widthAmp+diff))*(document.getElementById('display').scrollLeft - X_POS_CORRECTION) + X_POS_CORRECTION;
 	document.getElementById('display').scrollLeft = pos;
 });
 
@@ -1141,7 +1145,7 @@ document.getElementById('enlargeButton').addEventListener('click', function(){
 	showAmp();
 	setOffsetValue();
 	drawScore();
-	let pos = (widthAmp/(widthAmp-diff)) * (document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
+	let pos = (widthAmp/(widthAmp-diff)) * (document.getElementById('display').scrollLeft - X_POS_CORRECTION) + X_POS_CORRECTION;
 	document.getElementById('display').scrollLeft = pos;
 });
 
@@ -1157,7 +1161,7 @@ document.getElementById('minusButton').addEventListener('click', function(){
 	showAmp();
 	setOffsetValue();
 	drawScore();
-	let pos = (widthAmp/(widthAmp+diff))*(document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
+	let pos = (widthAmp/(widthAmp+diff))*(document.getElementById('display').scrollLeft - X_POS_CORRECTION) + X_POS_CORRECTION;
 	document.getElementById('display').scrollLeft = pos;
 });
 
@@ -1173,8 +1177,169 @@ document.getElementById('plusButton').addEventListener('click', function(){
 	showAmp();
 	setOffsetValue();
 	drawScore();
-	let pos = (widthAmp/(widthAmp-diff))* (document.getElementById('display').scrollLeft + 500 - X_OFFSET) + X_OFFSET - 500;
+	let pos = (widthAmp/(widthAmp-diff))* (document.getElementById('display').scrollLeft - X_POS_CORRECTION) + X_POS_CORRECTION;
 	document.getElementById('display').scrollLeft = pos;
+});
+
+
+/**
+ * msec だけ sleep するタイマー（error region フォーカス用）
+ * @param {*} msec 
+ */
+function sleep(msec) {
+	return new Promise(function(resolve) {
+		setTimeout(function() {resolve()}, msec);
+	})
+}
+
+
+/**
+ * 移動後の Region フォーカスを表示
+ */
+async function focusRegion(x, y, w, h){
+	let rect = document.createElementNS('http://www.w3.org/2000/svg','rect');
+	rect.setAttribute('x', x);
+	rect.setAttribute('y', y);
+	rect.setAttribute('width', w);
+	rect.setAttribute('height', h);
+	rect.setAttribute('stroke','rgba(200, 80, 0, 1)');
+	rect.setAttribute('stroke-width', 2);
+	rect.setAttribute('fill', 'rgba(255, 128, 0, 0.5)');
+	rect.setAttribute('id','focusRect');
+	frontLayer.appendChild(rect);
+	await sleep(300);
+	$("#focusRect").remove();
+	return;
+}
+
+
+/**
+ * prev ボタンが押されたときの処理
+ */
+document.getElementById('prevButton').addEventListener('click', function(){
+	let endPos = X_OFFSET + maxTime * amplifiedWidth;
+	let windowWidthStr = document.getElementById('display').style.width;
+	let windowWidthSize = 0;
+	let currentRegionIndex = regionIndex;
+
+	// window width の取得（px という単位がついているので数値だけ取り出す）
+	for (let i = 0; i < windowWidthStr.length; i++){
+		if (0 <= windowWidthStr[i] - '0' && windowWidthStr[i] - '0' <= 9){
+			windowWidthSize = 10 * windowWidthSize + Number(windowWidthStr[i] - '0');
+		}
+		else {
+			break;
+		}
+	}
+
+	if (endPos <= windowWidthSize){
+		return;
+	}
+	const WINDOW_CENTER = windowWidthSize / 2;
+	let currentPos = document.getElementById('display').scrollLeft + WINDOW_CENTER;
+	let prevPos = -1000;
+
+	// prev となるエラーリージョン検索
+	if (document.getElementById('display').scrollLeft > 0){
+		for (let i = 0; i < errorRegionsArray.length; i++){
+			let t1Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[i][0];
+			let t2Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[i][1];
+			let regionCenterPos = (t1Pos + t2Pos) / 2;
+			if (regionCenterPos < currentPos){
+				prevPos = regionCenterPos - WINDOW_CENTER;
+				regionIndex = i;
+			}
+		}
+		if (regionIndex == currentRegionIndex){
+			regionIndex = (regionIndex - 1 >= 0) ? (regionIndex - 1) : errorRegionsArray.length - 1;
+			let t1Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[i][0];
+			let t2Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[i][1];
+			let regionCenterPos = (t1Pos + t2Pos) / 2;
+			prevPos = regionCenterPos - WINDOW_CENTER;
+		}
+	}
+	else {
+		regionIndex = (regionIndex - 1 >= 0) ? (regionIndex - 1) : errorRegionsArray.length - 1;
+		let t1Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][0];
+		let t2Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][1];
+		prevPos = (t1Pos + t2Pos) / 2 - WINDOW_CENTER;
+	}
+
+	console.log("region index " + regionIndex);
+
+	let t1 = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][0];
+	let t2 = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][1];
+	let w = t2 - t1;
+	let h = 25 * staffLineSpace;
+	let topPos = yOffsetFmt3x - 5 * staffLineSpace;
+	focusRegion(t1, topPos, w, h);
+
+	document.getElementById('display').scrollLeft = prevPos;
+});
+
+
+/**
+ * next ボタンが押されたときの処理
+ */
+document.getElementById('nextButton').addEventListener('click', function(){
+	let endPos = X_OFFSET + maxTime * amplifiedWidth;
+	let windowWidthStr = document.getElementById('display').style.width;
+	let windowWidthSize = 0;
+	let currentRegionIndex = regionIndex;
+	console.log("aaa" + document.getElementById('display').scrollLeft);
+
+	// window width の取得（px という単位がついているので数値だけ取り出す）
+	for (let i = 0; i < windowWidthStr.length; i++){
+		if (0 <= windowWidthStr[i] - '0' && windowWidthStr[i] - '0' <= 9){
+			windowWidthSize = 10 * windowWidthSize + Number(windowWidthStr[i] - '0');
+		}
+		else {
+			break;
+		}
+	}
+
+	if (endPos <= windowWidthSize){
+		return;
+	}
+	const WINDOW_CENTER = windowWidthSize / 2;
+	let currentPos = document.getElementById('display').scrollLeft + WINDOW_CENTER + 1;
+	let nextPos = -1000;
+
+	// next となるエラーリージョン検索
+	if (document.getElementById('display').scrollLeft > 0){
+		for (let i = errorRegionsArray.length - 1; i >= 0; i--){
+			let t1Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[i][0];
+			let t2Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[i][1];
+			let regionCenterPos = (t1Pos + t2Pos) / 2;
+			if (currentPos < regionCenterPos){
+				nextPos = regionCenterPos - WINDOW_CENTER;
+				regionIndex = i;
+			}
+		}
+	}
+	else {
+		regionIndex = (regionIndex + 1 < errorRegionsArray.length) ? (regionIndex + 1) : 0;
+		let t1Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][0];
+		let t2Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][1];
+		nextPos = (t1Pos + t2Pos) / 2 - WINDOW_CENTER;
+	}
+
+	if (regionIndex == currentRegionIndex){
+		regionIndex = (regionIndex + 1 < errorRegionsArray.length) ? (regionIndex + 1) : 0;
+		let t1Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][0];
+		let t2Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][1];
+		let regionCenterPos = (t1Pos + t2Pos) / 2;
+		prevPos = regionCenterPos - WINDOW_CENTER;
+	}
+
+	let t1 = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][0];
+	let t2 = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][1];
+	let w = t2 - t1;
+	let h = 25 * staffLineSpace;
+	let topPos = yOffsetFmt3x - 5 * staffLineSpace;
+	focusRegion(t1, topPos, w, h);
+
+	document.getElementById('display').scrollLeft = nextPos;
 });
 
 
@@ -1234,13 +1399,13 @@ document.getElementById('drawButton').addEventListener('click', function(event){
 	UpdateMatchData();
 	document.getElementById('correctInfo').value="";
 	drawScore();
-	let pos = document.getElementById('moveToSec').value*amplifiedWidth + X_OFFSET - 500;
+	let pos = document.getElementById('moveToSec').value*amplifiedWidth + X_POS_CORRECTION;
 	document.getElementById('display').scrollLeft = pos;
 });
 
 
 document.getElementById('display').onscroll = function() {
-	document.getElementById('moveToSec').value=(this.scrollLeft + 500 - X_OFFSET)/amplifiedWidth;
+	document.getElementById('moveToSec').value=(this.scrollLeft - X_POS_CORRECTION)/amplifiedWidth;
 }
 
 
