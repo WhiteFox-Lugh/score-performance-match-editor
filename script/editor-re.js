@@ -1329,7 +1329,7 @@ document.getElementById('nextButton').addEventListener('click', function(){
 		let t1Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][0];
 		let t2Pos = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][1];
 		let regionCenterPos = (t1Pos + t2Pos) / 2;
-		prevPos = regionCenterPos - WINDOW_CENTER;
+		nextPos = regionCenterPos - WINDOW_CENTER;
 	}
 
 	let t1 = X_OFFSET + amplifiedWidth * errorRegionsArray[regionIndex][0];
